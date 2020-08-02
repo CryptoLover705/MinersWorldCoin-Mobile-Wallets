@@ -2,28 +2,4 @@
 
 ## Build instructions
 
-Dev:
-```
-clone && cd repo
-npm install --save
-```
-in node_modules/bs58check/index.js change
-```javascript
-
-require('create-hash') 
-```
-to
-```javascript 
-require('react-native-crypto').createHash
-```
-
-then to run
-
-```
-cd ios && pod install && cd ..
-react-native run-ios
-```
-or 
-```
-react-native run-android
-```
+See [Android](https://github.com/AstraCore/AstraCore-Mobile-Wallets/blob/master/Android-Compile.md) or [iOS](https://github.com/AstraCore/AstraCore-Mobile-Wallets/blob/master/iOS-Compile.md) compile guides on how to compile the wallet
