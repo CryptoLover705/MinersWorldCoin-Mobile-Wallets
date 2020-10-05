@@ -90,9 +90,9 @@ class FirstWalletScreen extends PureComponent {
         });
     }
 
-    codepillow = async () => {
+    CryptoLover = async () => {
 
-        let url = 'https://codepillow.io';
+        let url = 'https://cryptoloverbots.com';
 
         Linking.canOpenURL(url).then(supported => {
 
@@ -149,9 +149,9 @@ class FirstWalletScreen extends PureComponent {
                     <Text style={{opacity: 0.8, textAlign: 'center', marginTop: 20, width: '70%', color: 'white'}}>
                         Developed by
                     </Text>
-                    <TouchableOpacity onPress={this.codepillow}>
+                    <TouchableOpacity onPress={this.CryptoLover}>
                         <Text style={{opacity: 0.8, textAlign: 'center', fontWeight: 'bold', color: 'white'}}>
-                            Codepillow
+                            CryptoLover
                         </Text>
                     </TouchableOpacity>
                 </View>

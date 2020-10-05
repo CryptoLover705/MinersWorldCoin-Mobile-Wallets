@@ -42,7 +42,7 @@
 
 	// First wallet screen
 	// DO_NOT_TRANSLATE "firstWallet.firstLineTitle": "ASTRACORE WALLET",
-	// DO_NOT_TRANSLATE "firstWallet.moto":"one-CPU-one-vote, the world's fastest PoW blockchain",
+	// DO_NOT_TRANSLATE "firstWallet.moto":"In AstraCore We Trust",
 	"firstWallet.tooltipText": "시작하려면 아래 버튼중 하나를 탭하세요",
 	"firstWallet.createButton": "지갑 생성하기",
 	"firstWallet.importButton": "지갑 복구하기",

@@ -42,7 +42,7 @@
 
 	// First wallet screen
 	"firstWallet.firstLineTitle": "ASTRACORE WALLET", // DO_NOT_TRANSLATE
-	"firstWallet.moto":"one-CPU-one-vote, the world's fastest PoW blockchain", // DO_NOT_TRANSLATE
+	"firstWallet.moto":"In AstraCore We Trust", // DO_NOT_TRANSLATE
 	"firstWallet.tooltipText": "请点击下面的按钮",
 	"firstWallet.createButton": "创建新的钱包",
 	"firstWallet.importButton": "导入钱包",
