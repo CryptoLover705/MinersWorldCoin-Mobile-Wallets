@@ -13,7 +13,7 @@ type FontWeight =
   | 'semibold'
   | 'heavy'
   | 'black';
-type LayoutOrientation = 'portrait' | 'landscape';
+export type LayoutOrientation = 'portrait' | 'landscape';
 type AndroidDensityNumber = number;
 type SystemItemIcon =
   | 'done'
@@ -39,7 +39,12 @@ type SystemItemIcon =
   | 'fastForward'
   | 'undo'
   | 'redo';
-type Interpolation = 'linear' | 'accelerateDecelerate' | 'decelerate' | 'accelerate' | 'decelerateAccelerate';
+type Interpolation =
+  | 'linear'
+  | 'accelerateDecelerate'
+  | 'decelerate'
+  | 'accelerate'
+  | 'decelerateAccelerate';
 
 export interface OptionsSplitView {
   /**
@@ -60,6 +65,11 @@ export interface OptionsSplitView {
    * Set the maximum width of master view
    */
   maxWidth?: number;
+  /**
+   * Set background style of sidebar. Currently works for Mac Catalyst apps only.
+   * @default 'none'
+   */
+  primaryBackgroundStyle?: 'none' | 'sidebar';
 }
 
 export interface OptionsStatusBar {
@@ -83,6 +93,11 @@ export interface OptionsStatusBar {
    * #### (Android specific)
    */
   drawBehind?: boolean;
+  /**
+   * Allows the StatusBar to be translucent (blurred)
+   * #### (Android specific)
+   */
+  translucent?: boolean;
 }
 
 export interface OptionsLayout {
@@ -110,7 +125,7 @@ export interface OptionsLayout {
    * Set language direction.
    * only works with DefaultOptions
    */
-  direction?: 'rtl' | 'ltr';
+  direction?: 'rtl' | 'ltr' | 'locale';
 }
 
 export enum OptionsModalPresentationStyle {
@@ -121,14 +136,14 @@ export enum OptionsModalPresentationStyle {
   currentContext = 'currentContext',
   popover = 'popover',
   fullScreen = 'fullScreen',
-  none = 'none'
+  none = 'none',
 }
 
 export enum OptionsModalTransitionStyle {
   coverVertical = 'coverVertical',
   crossDissolve = 'crossDissolve',
   flipHorizontal = 'flipHorizontal',
-  partialCurl = 'partialCurl'
+  partialCurl = 'partialCurl',
 }
 
 export interface OptionsTopBarLargeTitle {
@@ -242,6 +257,11 @@ export interface OptionsTopBarSubtitle {
 
 export interface OptionsTopBarBackButton {
   /**
+   * Button id for reference press event
+   * #### (Android specific)
+   */
+  id?: string;
+  /**
    * Image to show as the back button
    */
   icon?: ImageRequireSource;
@@ -312,6 +332,10 @@ export interface OptionsTopBarBackground {
 
 export interface OptionsTopBarButton {
   /**
+   * (Android only) Sets a textual button to be ALL CAPS. default value is true
+   */
+  allCaps?: boolean;
+  /**
    * Button id for reference press event
    */
   id: string;
@@ -369,6 +393,10 @@ export interface OptionsTopBarButton {
    * #### (iOS specific)
    */
   fontWeight?: FontWeight;
+  /**
+   * Set the font size in dp
+   */
+  fontSize?: number;
   /**
    * Set the button enabled or disabled
    * @default true
@@ -519,7 +547,7 @@ export interface SharedElementTransition {
   fromId: string;
   toId: string;
   duration?: number;
-  interpolation: Interpolation;
+  interpolation?: Interpolation;
 }
 
 export interface ElementTransition {
@@ -546,11 +574,15 @@ export interface DisappearingElementAnimation extends ElementAnimation {
 export interface ElementAnimation {
   duration: number;
   startDelay?: number;
-  interpolation: Interpolation;
+  interpolation?: Interpolation;
 }
 
 export interface OptionsFab {
-  id: string;
+  /**
+   * ID is required when first instantiating the Fab button,
+   * however when updating the existing Fab button, ID is not required.
+   */
+  id?: string;
   backgroundColor?: Color;
   clickColor?: Color;
   rippleColor?: Color;
@@ -558,10 +590,8 @@ export interface OptionsFab {
   icon?: ImageRequireSource;
   iconColor?: Color;
   alignHorizontally?: 'left' | 'right';
-  alignVertically?: 'top' | 'bottom';
   hideOnScroll?: boolean;
-  size?: number;
-  actions?: OptionsFab[];
+  size?: 'mini' | 'regular';
 }
 
 export interface OptionsBottomTabs {
@@ -625,16 +655,18 @@ export interface OptionsBottomTabs {
    * Control the text display mode below the tab icon
    * #### (Android specific)
    */
-  titleDisplayMode?:
-    | 'alwaysShow'
-    | 'showWhenActive'
-    | 'alwaysHide'
-    | 'showWhenActiveForce';
+  titleDisplayMode?: 'alwaysShow' | 'showWhenActive' | 'alwaysHide' | 'showWhenActiveForce';
   /**
    * Set the elevation of the Bottom Tabs in dp
    * #### (Android specific)
    */
   elevation?: AndroidDensityNumber;
+  /**
+   * Hides the BottomTabs on scroll to increase the amount of content visible to the user.
+   * The options requires that the scrollable view will be the root view of the screen and that it specifies `nestedScrollEnabled: true`.
+   * #### (Android specific)
+   */
+  hideOnScroll?: boolean;
 }
 
 export interface DotIndicatorOptions {
@@ -663,6 +695,11 @@ export interface OptionsBottomTab {
    * Set the background color of the badge that is overlayed over the component
    */
   badgeColor?: string;
+  /**
+   * Show the badge with the animation.
+   * #### (Android specific)
+   */
+  animateBadge?: boolean;
   /**
    * Set a testID to reference the tab in E2E tests
    */
@@ -827,7 +864,7 @@ export interface OptionsPreview {
   /**
    * Height of the preview
    */
-  height?: 100;
+  height?: number;
   /**
    * You can control if the users gesture will result in pushing
    * the preview screen into the stack.

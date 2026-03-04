@@ -2,15 +2,13 @@ package com.reactnativenavigation.viewcontrollers.stack;
 
 import android.app.Activity;
 
-import com.reactnativenavigation.anim.NavigationAnimator;
-import com.reactnativenavigation.parse.Options;
-import com.reactnativenavigation.presentation.Presenter;
-import com.reactnativenavigation.presentation.StackPresenter;
+import com.reactnativenavigation.viewcontrollers.stack.topbar.button.BackButtonHelper;
+import com.reactnativenavigation.options.Options;
+import com.reactnativenavigation.viewcontrollers.viewcontroller.Presenter;
 import com.reactnativenavigation.react.events.EventEmitter;
-import com.reactnativenavigation.viewcontrollers.ChildControllersRegistry;
-import com.reactnativenavigation.viewcontrollers.ViewController;
-import com.reactnativenavigation.viewcontrollers.topbar.TopBarController;
-import com.reactnativenavigation.views.element.ElementTransitionManager;
+import com.reactnativenavigation.viewcontrollers.child.ChildControllersRegistry;
+import com.reactnativenavigation.viewcontrollers.viewcontroller.ViewController;
+import com.reactnativenavigation.viewcontrollers.stack.topbar.TopBarController;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -22,18 +20,19 @@ public class StackControllerBuilder {
     private TopBarController topBarController;
     private String id;
     private Options initialOptions = new Options();
-    private NavigationAnimator animator;
+    private StackAnimator animator;
     private BackButtonHelper backButtonHelper = new BackButtonHelper();
     private Presenter presenter;
     private StackPresenter stackPresenter;
     private List<ViewController> children = new ArrayList<>();
     private EventEmitter eventEmitter;
+    private FabPresenter fabPresenter = new FabPresenter();
 
     public StackControllerBuilder(Activity activity, EventEmitter eventEmitter) {
         this.activity = activity;
         this.eventEmitter = eventEmitter;
         presenter = new Presenter(activity, new Options());
-        animator = new NavigationAnimator(activity, new ElementTransitionManager());
+        animator = new StackAnimator(activity);
     }
 
     public StackControllerBuilder setEventEmitter(EventEmitter eventEmitter) {
@@ -80,13 +79,18 @@ public class StackControllerBuilder {
         return this;
     }
 
-    public StackControllerBuilder setAnimator(NavigationAnimator animator) {
+    public StackControllerBuilder setAnimator(StackAnimator animator) {
         this.animator = animator;
         return this;
     }
 
     StackControllerBuilder setBackButtonHelper(BackButtonHelper backButtonHelper) {
         this.backButtonHelper = backButtonHelper;
+        return this;
+    }
+
+    public StackControllerBuilder setFabPresenter(FabPresenter fabPresenter) {
+        this.fabPresenter = fabPresenter;
         return this;
     }
 
@@ -101,7 +105,8 @@ public class StackControllerBuilder {
                 initialOptions,
                 backButtonHelper,
                 stackPresenter,
-                presenter
+                presenter,
+                fabPresenter
         );
     }
 }

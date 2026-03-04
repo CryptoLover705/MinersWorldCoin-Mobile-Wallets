@@ -24,7 +24,7 @@
     "browserify-zlib": "^0.1.4",
     "bs58check": "2.1.2",
     "buffer": "^4.9.1",
-    "coinjs": "git://github.com/olexh/coinjs-react-native.git",
+    "coinjs": "https://github.com/olexh/coinjs-react-native.git",
     "console-browserify": "^1.1.0",
     "constants-browserify": "^1.0.0",
     "cross-spawn": "^7.0.1",

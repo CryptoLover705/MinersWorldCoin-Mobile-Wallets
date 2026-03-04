@@ -72,6 +72,10 @@
 	if (options.window.backgroundColor.hasValue) {
 		UIApplication.sharedApplication.delegate.window.backgroundColor = withDefault.window.backgroundColor.get;
 	}
+    
+    if (options.statusBar.visible.hasValue) {
+        [self.boundViewController setNeedsStatusBarAppearanceUpdate];
+    }
 }
 
 - (void)renderComponents:(RNNNavigationOptions *)options perform:(RNNReactViewReadyCompletionBlock)readyBlock {
@@ -120,7 +124,7 @@
 }
 
 - (BOOL)hidesBottomBarWhenPushed {
-    RNNNavigationOptions *withDefault = [self.boundViewController.topMostViewController.resolveOptions withDefault:self.defaultOptions];
+    RNNNavigationOptions *withDefault = (RNNNavigationOptions *)[self.boundViewController.topMostViewController.resolveOptions withDefault:self.defaultOptions];
     return ![withDefault.bottomTabs.visible getWithDefaultValue:YES];
 }
 

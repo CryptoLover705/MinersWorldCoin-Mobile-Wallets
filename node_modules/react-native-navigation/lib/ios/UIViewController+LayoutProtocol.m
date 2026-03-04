@@ -12,7 +12,6 @@
 					  eventEmitter:(RNNEventEmitter *)eventEmitter
 			  childViewControllers:(NSArray *)childViewControllers {
 	self = [self init];
-	
 	self.options = options;
 	self.defaultOptions = defaultOptions;
 	self.layoutInfo = layoutInfo;
@@ -21,9 +20,7 @@
     self.presenter = presenter;
     [self.presenter bindViewController:self];
     self.extendedLayoutIncludesOpaqueBars = YES;
-    if ([self respondsToSelector:@selector(setViewControllers:)]) {
-        [self performSelector:@selector(setViewControllers:) withObject:childViewControllers];
-    }
+    [self loadChildren:childViewControllers];
     [self.presenter applyOptionsOnInit:self.resolveOptions];
 
 	return self;
@@ -74,6 +71,13 @@
     [self.getCurrentChild render];
 }
 
+- (void)loadChildren:(NSArray *)children {
+    if (!self.isChildViewControllersLoaded && [self respondsToSelector:@selector(setViewControllers:)]) {
+        self.isChildViewControllersLoaded = YES;
+        [self performSelector:@selector(setViewControllers:) withObject:children];
+    }
+}
+
 - (void)readyForPresentation {
     if (self.reactViewReadyCallback) {
         self.reactViewReadyCallback();
@@ -91,6 +95,19 @@
     }
     
     return nil;
+}
+
+- (void)destroy {
+    [self destroyReactView];
+    [self.presentedViewController destroy];
+    
+    for (UIViewController* child in self.childViewControllers) {
+        [child destroy];
+    }
+}
+
+- (void)destroyReactView {
+    
 }
 
 - (UIViewController *)presentedComponentViewController {
@@ -132,6 +149,10 @@
     }
     
     return 0;
+}
+
+- (void)screenPopped {
+    
 }
 
 - (void)onChildWillAppear {
@@ -193,6 +214,14 @@
 
 - (void)setEventEmitter:(RNNEventEmitter *)eventEmitter {
 	objc_setAssociatedObject(self, @selector(eventEmitter), eventEmitter, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+}
+
+- (BOOL)isChildViewControllersLoaded {
+    return [objc_getAssociatedObject(self, @selector(isChildViewControllersLoaded)) boolValue];
+}
+
+- (void)setIsChildViewControllersLoaded:(BOOL)isChildViewControllersLoaded {
+    objc_setAssociatedObject(self, @selector(isChildViewControllersLoaded), [NSNumber numberWithBool:isChildViewControllersLoaded], OBJC_ASSOCIATION_RETAIN_NONATOMIC);
 }
 
 - (id<RNNComponentViewCreator>)creator {

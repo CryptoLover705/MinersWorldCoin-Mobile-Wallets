@@ -55,3 +55,4 @@ buck-out/
 .jest-cache
 android/app/release/sugarchain 1.0.1 8.apk
 android/app/release/app-release.apk
+node_modules

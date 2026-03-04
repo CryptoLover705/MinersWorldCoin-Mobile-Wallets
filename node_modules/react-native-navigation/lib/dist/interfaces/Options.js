@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.OptionsModalTransitionStyle = exports.OptionsModalPresentationStyle = void 0;
 var OptionsModalPresentationStyle;
 (function (OptionsModalPresentationStyle) {
     OptionsModalPresentationStyle["formSheet"] = "formSheet";
