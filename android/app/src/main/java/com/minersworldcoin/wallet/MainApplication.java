@@ -1,4 +1,4 @@
-package com.astracore.wallet;
+package com.minersworldcoin.wallet;
 
 import android.app.Application;
 

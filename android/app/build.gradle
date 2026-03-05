@@ -23,7 +23,7 @@ android {
     }
 
     defaultConfig {
-        applicationId "com.astracore.wallet"
+        applicationId "com.minersworldcoin.wallet"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

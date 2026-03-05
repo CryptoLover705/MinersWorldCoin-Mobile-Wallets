@@ -18,7 +18,7 @@
 	"addAddress.incorrectAddressAlert": "Неправильный адрес!",
 	"addAddress.confirmAlertButton": "OK",
 	"addAddress.nameTooltipText": "Минимум 3 символа",
-	"addAddress.addressTooltipText": "Используйте только AstraCore адрес",
+	"addAddress.addressTooltipText": "Используйте только MinersWorldCoin адрес",
 	"addAddress.nameInput": "Название",
 	"addAddress.addressInput": "Адрес",
 	"addAddress.addButton": "Добавить",
@@ -41,8 +41,8 @@
 	"createWallet.createWalletButton": "Да",
 
 	// First wallet screen
-	"firstWallet.firstLineTitle": "ASTRACORE WALLET", // DO_NOT_TRANSLATE
-	"firstWallet.moto":"In AstraCore We Trust",  // DO_NOT_TRANSLATE
+	"firstWallet.firstLineTitle": "MINERSWORLDCOIN WALLET", // DO_NOT_TRANSLATE
+	"firstWallet.moto":"In MinersWorldCoin We Trust",  // DO_NOT_TRANSLATE
 	"firstWallet.tooltipText": "Чтобы начать использовать приложение, нажмите на одну из кнопок ниже",
 	"firstWallet.createButton": "Создать новый кошелек",
 	"firstWallet.importButton": "Импортировать кошелек",
@@ -116,7 +116,7 @@
 	"send.toText": "До",
 	"send.feeText": "Комиссия",
 	"send.amountText": "Количество",
-	"send.addressExampleInput": "sugar1qcu07vm47ceh7lec3umx7nv7e8tm8r8zw4l2uyx",
+	"send.addressExampleInput": "9ExTRgiy5KqRtRurVUD2oBoUKNLMYn68tD",
 	"send.confirmButton": "Подтвердить",
 	"send.successAlert": "Успешно!",
 	"send.errorAlert": "Ошибка отправки транзакции!",
@@ -128,7 +128,7 @@
 
 	// Wallet list screen
 	"walletList.title": "Список кошельков",
-	"wallet.coinTitle": "ASTC", // DO_NOT_TRANSLATE
+	"wallet.coinTitle": "MWC", // DO_NOT_TRANSLATE
 	"walletList.empty": "Список кошельков пуст.",
 	"walletList.addButton": "Добавить",
 	"walletList.cancelButton": "Отменить",

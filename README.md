@@ -1,6 +1,6 @@
-# AstraCore-mobile-wallet
+# MinersWorldCoin-mobile-wallet
 
-AstraCore mobile wallet working on React Native
+MinersWorldCoin mobile wallet working on React Native
 
 ## Getting Started
 

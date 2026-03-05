@@ -41,8 +41,8 @@
 	"createWallet.createWalletButton": "是",
 
 	// First wallet screen
-	"firstWallet.firstLineTitle": "ASTRACORE WALLET", // DO_NOT_TRANSLATE
-	"firstWallet.moto":"In AstraCore We Trust", // DO_NOT_TRANSLATE
+	"firstWallet.firstLineTitle": "MINERSWORLDCOIN WALLET", // DO_NOT_TRANSLATE
+	"firstWallet.moto":"In MinersWorldCoin We Trust", // DO_NOT_TRANSLATE
 	"firstWallet.tooltipText": "请点击下面的按钮",
 	"firstWallet.createButton": "创建新的钱包",
 	"firstWallet.importButton": "导入钱包",
@@ -116,7 +116,7 @@
 	"send.toText": "到",
 	"send.feeText": "手续费",
 	"send.amountText": "数量",
-	"send.addressExampleInput": "sugar1qcu07vm47ceh7lec3umx7nv7e8tm8r8zw4l2uyx",
+	"send.addressExampleInput": "9ExTRgiy5KqRtRurVUD2oBoUKNLMYn68tD",
 	"send.confirmButton": "确认",
 	"send.successAlert": "成功!",
 	"send.errorAlert": "交易发送时产生错误!",
@@ -167,7 +167,7 @@
 
 	// Wallet screen
 	"wallet.title": "钱包",
-	"wallet.coinTitle": "ASTC", // DO_NOT_TRANSLATE
+	"wallet.coinTitle": "MWC", // DO_NOT_TRANSLATE
 	"wallet.empty": "钱包历史记录为空，尝试先交易一次吧",
 	"wallet.emptyReceiveTab": "接收菜单",
 	"wallet.networkStatusTitle": "网络状态",

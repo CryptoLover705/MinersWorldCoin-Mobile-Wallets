@@ -15,8 +15,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "2D02E47A1E0B4A5D006451C7"
-               BuildableName = "AstraCore-tvOS.app"
-               BlueprintName = "AstraCore-tvOS"
+               BuildableName = "MinersWorldCoin-tvOS.app"
+               BlueprintName = "MinersWorldCoin-tvOS"
                ReferencedContainer = "container:AOK Wallet.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -33,8 +33,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "2D02E48F1E0B4A5D006451C7"
-               BuildableName = "AstraCore-tvOSTests.xctest"
-               BlueprintName = "AstraCore-tvOSTests"
+               BuildableName = "MinersWorldCoin-tvOSTests.xctest"
+               BlueprintName = "MinersWorldCoin-tvOSTests"
                ReferencedContainer = "container:AOK Wallet.xcodeproj">
             </BuildableReference>
          </TestableReference>
@@ -55,8 +55,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "2D02E47A1E0B4A5D006451C7"
-            BuildableName = "AstraCore-tvOS.app"
-            BlueprintName = "AstraCore-tvOS"
+            BuildableName = "MinersWorldCoin-tvOS.app"
+            BlueprintName = "MinersWorldCoin-tvOS"
             ReferencedContainer = "container:AOK Wallet.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
@@ -72,8 +72,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "2D02E47A1E0B4A5D006451C7"
-            BuildableName = "AstraCore-tvOS.app"
-            BlueprintName = "AstraCore-tvOS"
+            BuildableName = "MinersWorldCoin-tvOS.app"
+            BlueprintName = "MinersWorldCoin-tvOS"
             ReferencedContainer = "container:AOK Wallet.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>

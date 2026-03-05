@@ -38,11 +38,11 @@
 		</dict>
 	</dict>
 	<key>NSCameraUsageDescription</key>
-	<string>This allows AstraCore Wallet to let you read QR codes which will provide an easier way to receive and share wallets address</string>
+	<string>This allows MinersWorldCoin Wallet to let you read QR codes which will provide an easier way to receive and share wallets address</string>
 	<key>NSFaceIDUsageDescription</key>
 	<string>Enabling Face ID allows you quick and secure access to your wallet.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>AstraCore would like to access your location</string>
+	<string>MinersWorldCoin would like to access your location</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Your message to user when the photo library is accessed for the first time</string>
 	<key>UIAppFonts</key>

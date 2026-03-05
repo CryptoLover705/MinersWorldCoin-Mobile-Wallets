@@ -15,8 +15,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-               BuildableName = "AstraCore.app"
-               BlueprintName = "AstraCore"
+               BuildableName = "MinersWorldCoin.app"
+               BlueprintName = "MinersWorldCoin"
                ReferencedContainer = "container:AOK Wallet.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -33,8 +33,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "00E356ED1AD99517003FC87E"
-               BuildableName = "AstraCoreTests.xctest"
-               BlueprintName = "AstraCoreTests"
+               BuildableName = "MinersWorldCoinTests.xctest"
+               BlueprintName = "MinersWorldCoinTests"
                ReferencedContainer = "container:AOK Wallet.xcodeproj">
             </BuildableReference>
          </TestableReference>
@@ -55,17 +55,17 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-            BuildableName = "AstraCore Wallet.app"
-            BlueprintName = "AstraCore"
-            ReferencedContainer = "container:AstraCore.xcodeproj">
+            BuildableName = "MinersWorldCoin Wallet.app"
+            BlueprintName = "MinersWorldCoin"
+            ReferencedContainer = "container:MinersWorldCoin.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-            BuildableName = "AstraCore.app"
-            BlueprintName = "AstraCore"
+            BuildableName = "MinersWorldCoin.app"
+            BlueprintName = "MinersWorldCoin"
             ReferencedContainer = "container:AOK Wallet.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
@@ -81,8 +81,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-            BuildableName = "AstraCore.app"
-            BlueprintName = "AstraCore"
+            BuildableName = "MinersWorldCoin.app"
+            BlueprintName = "MinersWorldCoin"
             ReferencedContainer = "container:AOK Wallet.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>

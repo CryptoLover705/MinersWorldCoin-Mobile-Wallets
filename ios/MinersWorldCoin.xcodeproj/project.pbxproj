@@ -7,19 +7,19 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		00E356F31AD99517003FC87E /* AstraCoreTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 00E356F21AD99517003FC87E /* AstraCoreTests.m */; };
+		00E356F31AD99517003FC87E /* MinersWorldCoinTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 00E356F21AD99517003FC87E /* MinersWorldCoinTests.m */; };
 		13B07FBC1A68108700A75B9A /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB01A68108700A75B9A /* AppDelegate.m */; };
 		13B07FBD1A68108700A75B9A /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB11A68108700A75B9A /* LaunchScreen.xib */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		13B07FC11A68108700A75B9A /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB71A68108700A75B9A /* main.m */; };
-		1C4F95DB90B6C813E0F59A7C /* libPods-AstraCore-AstraCoreTests.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6E084A8D0B3B77DD56ADA66D /* libPods-AstraCore-AstraCoreTests.a */; };
+		1C4F95DB90B6C813E0F59A7C /* libPods-MinersWorldCoin-MinersWorldCoinTests.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6E084A8D0B3B77DD56ADA66D /* libPods-MinersWorldCoin-MinersWorldCoinTests.a */; };
 		2D02E4BC1E0B4A80006451C7 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB01A68108700A75B9A /* AppDelegate.m */; };
 		2D02E4BD1E0B4A84006451C7 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		2D02E4BF1E0B4AB3006451C7 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB71A68108700A75B9A /* main.m */; };
-		2DCD954D1E0B4F2C00145EB5 /* AstraCoreTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 00E356F21AD99517003FC87E /* AstraCoreTests.m */; };
-		338BBF08E1D42D218FD7616F /* libPods-AstraCore.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 29321FC99B4113F6F447B426 /* libPods-AstraCore.a */; };
-		BCAD4FFA0DABA44B16C04B46 /* libPods-AstraCore-tvOS.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 15240CF0333981DDC64B4AD6 /* libPods-AstraCore-tvOS.a */; };
-		BE6297504210AA506D637E35 /* libPods-AstraCore-tvOSTests.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F55F50E208CE59D645F5600 /* libPods-AstraCore-tvOSTests.a */; };
+		2DCD954D1E0B4F2C00145EB5 /* MinersWorldCoinTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 00E356F21AD99517003FC87E /* MinersWorldCoinTests.m */; };
+		338BBF08E1D42D218FD7616F /* libPods-MinersWorldCoin.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 29321FC99B4113F6F447B426 /* libPods-MinersWorldCoin.a */; };
+		BCAD4FFA0DABA44B16C04B46 /* libPods-MinersWorldCoin-tvOS.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 15240CF0333981DDC64B4AD6 /* libPods-MinersWorldCoin-tvOS.a */; };
+		BE6297504210AA506D637E35 /* libPods-MinersWorldCoin-tvOSTests.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F55F50E208CE59D645F5600 /* libPods-MinersWorldCoin-tvOSTests.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -28,61 +28,61 @@
 			containerPortal = 83CBB9F71A601CBA00E9B192 /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 13B07F861A680F5B00A75B9A;
-			remoteInfo = AstraCore;
+			remoteInfo = MinersWorldCoin;
 		};
 		2D02E4911E0B4A5D006451C7 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 83CBB9F71A601CBA00E9B192 /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 2D02E47A1E0B4A5D006451C7;
-			remoteInfo = "AstraCore-tvOS";
+			remoteInfo = "MinersWorldCoin-tvOS";
 		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
 		008F07F21AC5B25A0029DE68 /* main.jsbundle */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = main.jsbundle; sourceTree = "<group>"; };
-		00E356EE1AD99517003FC87E /* AstraCoreTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AstraCoreTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		00E356EE1AD99517003FC87E /* MinersWorldCoinTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MinersWorldCoinTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		00E356F11AD99517003FC87E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		00E356F21AD99517003FC87E /* AstraCoreTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AstraCoreTests.m; sourceTree = "<group>"; };
+		00E356F21AD99517003FC87E /* MinersWorldCoinTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MinersWorldCoinTests.m; sourceTree = "<group>"; };
 		0D6AE1668B384DF89717F945 /* SimpleLineIcons.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = SimpleLineIcons.ttf; path = "../node_modules/react-native-vector-icons/Fonts/SimpleLineIcons.ttf"; sourceTree = "<group>"; };
-		13B07F961A680F5B00A75B9A /* AstraCore Wallet.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "AstraCore Wallet.app"; sourceTree = BUILT_PRODUCTS_DIR; };
-		13B07FAF1A68108700A75B9A /* AppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AppDelegate.h; path = AstraCore/AppDelegate.h; sourceTree = "<group>"; };
-		13B07FB01A68108700A75B9A /* AppDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = AppDelegate.m; path = AstraCore/AppDelegate.m; sourceTree = "<group>"; };
+		13B07F961A680F5B00A75B9A /* MinersWorldCoin Wallet.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "MinersWorldCoin Wallet.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		13B07FAF1A68108700A75B9A /* AppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AppDelegate.h; path = MinersWorldCoin/AppDelegate.h; sourceTree = "<group>"; };
+		13B07FB01A68108700A75B9A /* AppDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = AppDelegate.m; path = MinersWorldCoin/AppDelegate.m; sourceTree = "<group>"; };
 		13B07FB21A68108700A75B9A /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/LaunchScreen.xib; sourceTree = "<group>"; };
-		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = AstraCore/Images.xcassets; sourceTree = "<group>"; };
-		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = AstraCore/Info.plist; sourceTree = "<group>"; };
-		13B07FB71A68108700A75B9A /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = main.m; path = AstraCore/main.m; sourceTree = "<group>"; };
-		15240CF0333981DDC64B4AD6 /* libPods-AstraCore-tvOS.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-AstraCore-tvOS.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = MinersWorldCoin/Images.xcassets; sourceTree = "<group>"; };
+		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = MinersWorldCoin/Info.plist; sourceTree = "<group>"; };
+		13B07FB71A68108700A75B9A /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = main.m; path = MinersWorldCoin/main.m; sourceTree = "<group>"; };
+		15240CF0333981DDC64B4AD6 /* libPods-MinersWorldCoin-tvOS.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-MinersWorldCoin-tvOS.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		1771BFA24CC7417EAFF9A806 /* Ionicons.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = Ionicons.ttf; path = "../node_modules/react-native-vector-icons/Fonts/Ionicons.ttf"; sourceTree = "<group>"; };
 		19BE8D0C41B94B48A06C7DF7 /* Zocial.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = Zocial.ttf; path = "../node_modules/react-native-vector-icons/Fonts/Zocial.ttf"; sourceTree = "<group>"; };
 		1EF4F130CC074C0AB203FD6E /* Entypo.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = Entypo.ttf; path = "../node_modules/react-native-vector-icons/Fonts/Entypo.ttf"; sourceTree = "<group>"; };
-		29321FC99B4113F6F447B426 /* libPods-AstraCore.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-AstraCore.a"; sourceTree = BUILT_PRODUCTS_DIR; };
-		2D02E47B1E0B4A5D006451C7 /* AstraCore-tvOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "AstraCore-tvOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
-		2D02E4901E0B4A5D006451C7 /* AstraCore-tvOSTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "AstraCore-tvOSTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		29321FC99B4113F6F447B426 /* libPods-MinersWorldCoin.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-MinersWorldCoin.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		2D02E47B1E0B4A5D006451C7 /* MinersWorldCoin-tvOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "MinersWorldCoin-tvOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		2D02E4901E0B4A5D006451C7 /* MinersWorldCoin-tvOSTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "MinersWorldCoin-tvOSTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		2EE7A08FE2C04C48A1E3D58A /* Fontisto.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = Fontisto.ttf; path = "../node_modules/react-native-vector-icons/Fonts/Fontisto.ttf"; sourceTree = "<group>"; };
-		40BB007C193EBA72FCAB0BA5 /* Pods-AstraCore-AstraCoreTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-AstraCore-AstraCoreTests.debug.xcconfig"; path = "Target Support Files/Pods-AstraCore-AstraCoreTests/Pods-AstraCore-AstraCoreTests.debug.xcconfig"; sourceTree = "<group>"; };
-		4713B20CEC21971D1F389216 /* Pods-AstraCore-tvOSTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-AstraCore-tvOSTests.debug.xcconfig"; path = "Target Support Files/Pods-AstraCore-tvOSTests/Pods-AstraCore-tvOSTests.debug.xcconfig"; sourceTree = "<group>"; };
+		40BB007C193EBA72FCAB0BA5 /* Pods-MinersWorldCoin-MinersWorldCoinTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MinersWorldCoin-MinersWorldCoinTests.debug.xcconfig"; path = "Target Support Files/Pods-MinersWorldCoin-MinersWorldCoinTests/Pods-MinersWorldCoin-MinersWorldCoinTests.debug.xcconfig"; sourceTree = "<group>"; };
+		4713B20CEC21971D1F389216 /* Pods-MinersWorldCoin-tvOSTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MinersWorldCoin-tvOSTests.debug.xcconfig"; path = "Target Support Files/Pods-MinersWorldCoin-tvOSTests/Pods-MinersWorldCoin-tvOSTests.debug.xcconfig"; sourceTree = "<group>"; };
 		4A21FA2DDCE84E6EA1B65648 /* FontAwesome5_Solid.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = FontAwesome5_Solid.ttf; path = "../node_modules/react-native-vector-icons/Fonts/FontAwesome5_Solid.ttf"; sourceTree = "<group>"; };
 		4E1F7A22215A4FE5B67D9F4E /* MaterialIcons.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = MaterialIcons.ttf; path = "../node_modules/react-native-vector-icons/Fonts/MaterialIcons.ttf"; sourceTree = "<group>"; };
-		4F55F50E208CE59D645F5600 /* libPods-AstraCore-tvOSTests.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-AstraCore-tvOSTests.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		4F55F50E208CE59D645F5600 /* libPods-MinersWorldCoin-tvOSTests.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-MinersWorldCoin-tvOSTests.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		564E230A6FED4F3683146185 /* Foundation.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = Foundation.ttf; path = "../node_modules/react-native-vector-icons/Fonts/Foundation.ttf"; sourceTree = "<group>"; };
-		5791223FB51AFF09E4C623EA /* Pods-AstraCore.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-AstraCore.release.xcconfig"; path = "Target Support Files/Pods-AstraCore/Pods-AstraCore.release.xcconfig"; sourceTree = "<group>"; };
-		58253118A06A10EC74626221 /* Pods-AstraCore.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-AstraCore.debug.xcconfig"; path = "Target Support Files/Pods-AstraCore/Pods-AstraCore.debug.xcconfig"; sourceTree = "<group>"; };
-		6E084A8D0B3B77DD56ADA66D /* libPods-AstraCore-AstraCoreTests.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-AstraCore-AstraCoreTests.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		5791223FB51AFF09E4C623EA /* Pods-MinersWorldCoin.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MinersWorldCoin.release.xcconfig"; path = "Target Support Files/Pods-MinersWorldCoin/Pods-MinersWorldCoin.release.xcconfig"; sourceTree = "<group>"; };
+		58253118A06A10EC74626221 /* Pods-MinersWorldCoin.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MinersWorldCoin.debug.xcconfig"; path = "Target Support Files/Pods-MinersWorldCoin/Pods-MinersWorldCoin.debug.xcconfig"; sourceTree = "<group>"; };
+		6E084A8D0B3B77DD56ADA66D /* libPods-MinersWorldCoin-MinersWorldCoinTests.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-MinersWorldCoin-MinersWorldCoinTests.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		6F7CF6246EA5473A95F0EAB2 /* FontAwesome5_Regular.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = FontAwesome5_Regular.ttf; path = "../node_modules/react-native-vector-icons/Fonts/FontAwesome5_Regular.ttf"; sourceTree = "<group>"; };
 		7549630DFB444AD187A29524 /* MaterialCommunityIcons.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = MaterialCommunityIcons.ttf; path = "../node_modules/react-native-vector-icons/Fonts/MaterialCommunityIcons.ttf"; sourceTree = "<group>"; };
 		76E9E9FAAD004FAFA2ABF7D6 /* EvilIcons.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = EvilIcons.ttf; path = "../node_modules/react-native-vector-icons/Fonts/EvilIcons.ttf"; sourceTree = "<group>"; };
-		99C4DFC02D5AFD2221208DA3 /* Pods-AstraCore-tvOSTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-AstraCore-tvOSTests.release.xcconfig"; path = "Target Support Files/Pods-AstraCore-tvOSTests/Pods-AstraCore-tvOSTests.release.xcconfig"; sourceTree = "<group>"; };
-		9F43DA2873413A3560E0342A /* Pods-AstraCore-AstraCoreTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-AstraCore-AstraCoreTests.release.xcconfig"; path = "Target Support Files/Pods-AstraCore-AstraCoreTests/Pods-AstraCore-AstraCoreTests.release.xcconfig"; sourceTree = "<group>"; };
+		99C4DFC02D5AFD2221208DA3 /* Pods-MinersWorldCoin-tvOSTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MinersWorldCoin-tvOSTests.release.xcconfig"; path = "Target Support Files/Pods-MinersWorldCoin-tvOSTests/Pods-MinersWorldCoin-tvOSTests.release.xcconfig"; sourceTree = "<group>"; };
+		9F43DA2873413A3560E0342A /* Pods-MinersWorldCoin-MinersWorldCoinTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MinersWorldCoin-MinersWorldCoinTests.release.xcconfig"; path = "Target Support Files/Pods-MinersWorldCoin-MinersWorldCoinTests/Pods-MinersWorldCoin-MinersWorldCoinTests.release.xcconfig"; sourceTree = "<group>"; };
 		ABF41AA02B0C456BB4FE5902 /* FontAwesome.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = FontAwesome.ttf; path = "../node_modules/react-native-vector-icons/Fonts/FontAwesome.ttf"; sourceTree = "<group>"; };
 		BAABAFE3C431421C9EA66AD3 /* Feather.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = Feather.ttf; path = "../node_modules/react-native-vector-icons/Fonts/Feather.ttf"; sourceTree = "<group>"; };
 		BFF8FE96EC7F40A09270C2B9 /* AntDesign.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = AntDesign.ttf; path = "../node_modules/react-native-vector-icons/Fonts/AntDesign.ttf"; sourceTree = "<group>"; };
 		C0EF46ACFFFF45AFA794C974 /* Octicons.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = Octicons.ttf; path = "../node_modules/react-native-vector-icons/Fonts/Octicons.ttf"; sourceTree = "<group>"; };
 		C53634B163DF4FD9BAC73CE7 /* FontAwesome5_Brands.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = FontAwesome5_Brands.ttf; path = "../node_modules/react-native-vector-icons/Fonts/FontAwesome5_Brands.ttf"; sourceTree = "<group>"; };
-		E68073FD2F57CB262CE72605 /* Pods-AstraCore-tvOS.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-AstraCore-tvOS.debug.xcconfig"; path = "Target Support Files/Pods-AstraCore-tvOS/Pods-AstraCore-tvOS.debug.xcconfig"; sourceTree = "<group>"; };
+		E68073FD2F57CB262CE72605 /* Pods-MinersWorldCoin-tvOS.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MinersWorldCoin-tvOS.debug.xcconfig"; path = "Target Support Files/Pods-MinersWorldCoin-tvOS/Pods-MinersWorldCoin-tvOS.debug.xcconfig"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		ED2971642150620600B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = Platforms/AppleTVOS.platform/Developer/SDKs/AppleTVOS12.0.sdk/System/Library/Frameworks/JavaScriptCore.framework; sourceTree = DEVELOPER_DIR; };
-		FF3991B64406C9E345C00716 /* Pods-AstraCore-tvOS.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-AstraCore-tvOS.release.xcconfig"; path = "Target Support Files/Pods-AstraCore-tvOS/Pods-AstraCore-tvOS.release.xcconfig"; sourceTree = "<group>"; };
+		FF3991B64406C9E345C00716 /* Pods-MinersWorldCoin-tvOS.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MinersWorldCoin-tvOS.release.xcconfig"; path = "Target Support Files/Pods-MinersWorldCoin-tvOS/Pods-MinersWorldCoin-tvOS.release.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -90,7 +90,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1C4F95DB90B6C813E0F59A7C /* libPods-AstraCore-AstraCoreTests.a in Frameworks */,
+				1C4F95DB90B6C813E0F59A7C /* libPods-MinersWorldCoin-MinersWorldCoinTests.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -98,7 +98,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				338BBF08E1D42D218FD7616F /* libPods-AstraCore.a in Frameworks */,
+				338BBF08E1D42D218FD7616F /* libPods-MinersWorldCoin.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -106,7 +106,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				BCAD4FFA0DABA44B16C04B46 /* libPods-AstraCore-tvOS.a in Frameworks */,
+				BCAD4FFA0DABA44B16C04B46 /* libPods-MinersWorldCoin-tvOS.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -114,20 +114,20 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				BE6297504210AA506D637E35 /* libPods-AstraCore-tvOSTests.a in Frameworks */,
+				BE6297504210AA506D637E35 /* libPods-MinersWorldCoin-tvOSTests.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		00E356EF1AD99517003FC87E /* AstraCoreTests */ = {
+		00E356EF1AD99517003FC87E /* MinersWorldCoinTests */ = {
 			isa = PBXGroup;
 			children = (
-				00E356F21AD99517003FC87E /* AstraCoreTests.m */,
+				00E356F21AD99517003FC87E /* MinersWorldCoinTests.m */,
 				00E356F01AD99517003FC87E /* Supporting Files */,
 			);
-			path = AstraCoreTests;
+			path = MinersWorldCoinTests;
 			sourceTree = "<group>";
 		};
 		00E356F01AD99517003FC87E /* Supporting Files */ = {
@@ -138,7 +138,7 @@
 			name = "Supporting Files";
 			sourceTree = "<group>";
 		};
-		13B07FAE1A68108700A75B9A /* AstraCore */ = {
+		13B07FAE1A68108700A75B9A /* MinersWorldCoin */ = {
 			isa = PBXGroup;
 			children = (
 				008F07F21AC5B25A0029DE68 /* main.jsbundle */,
@@ -149,7 +149,7 @@
 				13B07FB11A68108700A75B9A /* LaunchScreen.xib */,
 				13B07FB71A68108700A75B9A /* main.m */,
 			);
-			name = AstraCore;
+			name = MinersWorldCoin;
 			sourceTree = "<group>";
 		};
 		2D16E6871FA4F8E400B85C8A /* Frameworks */ = {
@@ -157,10 +157,10 @@
 			children = (
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
 				ED2971642150620600B7C4FE /* JavaScriptCore.framework */,
-				29321FC99B4113F6F447B426 /* libPods-AstraCore.a */,
-				6E084A8D0B3B77DD56ADA66D /* libPods-AstraCore-AstraCoreTests.a */,
-				15240CF0333981DDC64B4AD6 /* libPods-AstraCore-tvOS.a */,
-				4F55F50E208CE59D645F5600 /* libPods-AstraCore-tvOSTests.a */,
+				29321FC99B4113F6F447B426 /* libPods-MinersWorldCoin.a */,
+				6E084A8D0B3B77DD56ADA66D /* libPods-MinersWorldCoin-MinersWorldCoinTests.a */,
+				15240CF0333981DDC64B4AD6 /* libPods-MinersWorldCoin-tvOS.a */,
+				4F55F50E208CE59D645F5600 /* libPods-MinersWorldCoin-tvOSTests.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -168,14 +168,14 @@
 		4EB21869B2B26CBA1E126CA3 /* Pods */ = {
 			isa = PBXGroup;
 			children = (
-				58253118A06A10EC74626221 /* Pods-AstraCore.debug.xcconfig */,
-				5791223FB51AFF09E4C623EA /* Pods-AstraCore.release.xcconfig */,
-				40BB007C193EBA72FCAB0BA5 /* Pods-AstraCore-AstraCoreTests.debug.xcconfig */,
-				9F43DA2873413A3560E0342A /* Pods-AstraCore-AstraCoreTests.release.xcconfig */,
-				E68073FD2F57CB262CE72605 /* Pods-AstraCore-tvOS.debug.xcconfig */,
-				FF3991B64406C9E345C00716 /* Pods-AstraCore-tvOS.release.xcconfig */,
-				4713B20CEC21971D1F389216 /* Pods-AstraCore-tvOSTests.debug.xcconfig */,
-				99C4DFC02D5AFD2221208DA3 /* Pods-AstraCore-tvOSTests.release.xcconfig */,
+				58253118A06A10EC74626221 /* Pods-MinersWorldCoin.debug.xcconfig */,
+				5791223FB51AFF09E4C623EA /* Pods-MinersWorldCoin.release.xcconfig */,
+				40BB007C193EBA72FCAB0BA5 /* Pods-MinersWorldCoin-MinersWorldCoinTests.debug.xcconfig */,
+				9F43DA2873413A3560E0342A /* Pods-MinersWorldCoin-MinersWorldCoinTests.release.xcconfig */,
+				E68073FD2F57CB262CE72605 /* Pods-MinersWorldCoin-tvOS.debug.xcconfig */,
+				FF3991B64406C9E345C00716 /* Pods-MinersWorldCoin-tvOS.release.xcconfig */,
+				4713B20CEC21971D1F389216 /* Pods-MinersWorldCoin-tvOSTests.debug.xcconfig */,
+				99C4DFC02D5AFD2221208DA3 /* Pods-MinersWorldCoin-tvOSTests.release.xcconfig */,
 			);
 			path = Pods;
 			sourceTree = "<group>";
@@ -190,9 +190,9 @@
 		83CBB9F61A601CBA00E9B192 = {
 			isa = PBXGroup;
 			children = (
-				13B07FAE1A68108700A75B9A /* AstraCore */,
+				13B07FAE1A68108700A75B9A /* MinersWorldCoin */,
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
-				00E356EF1AD99517003FC87E /* AstraCoreTests */,
+				00E356EF1AD99517003FC87E /* MinersWorldCoinTests */,
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
 				4EB21869B2B26CBA1E126CA3 /* Pods */,
@@ -206,10 +206,10 @@
 		83CBBA001A601CBA00E9B192 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				13B07F961A680F5B00A75B9A /* AstraCore Wallet.app */,
-				00E356EE1AD99517003FC87E /* AstraCoreTests.xctest */,
-				2D02E47B1E0B4A5D006451C7 /* AstraCore-tvOS.app */,
-				2D02E4901E0B4A5D006451C7 /* AstraCore-tvOSTests.xctest */,
+				13B07F961A680F5B00A75B9A /* MinersWorldCoin Wallet.app */,
+				00E356EE1AD99517003FC87E /* MinersWorldCoinTests.xctest */,
+				2D02E47B1E0B4A5D006451C7 /* MinersWorldCoin-tvOS.app */,
+				2D02E4901E0B4A5D006451C7 /* MinersWorldCoin-tvOSTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -240,9 +240,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		00E356ED1AD99517003FC87E /* AstraCoreTests */ = {
+		00E356ED1AD99517003FC87E /* MinersWorldCoinTests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 00E357021AD99517003FC87E /* Build configuration list for PBXNativeTarget "AstraCoreTests" */;
+			buildConfigurationList = 00E357021AD99517003FC87E /* Build configuration list for PBXNativeTarget "MinersWorldCoinTests" */;
 			buildPhases = (
 				A6ABC7945B09C028A9E9D5E1 /* [CP] Check Pods Manifest.lock */,
 				00E356EA1AD99517003FC87E /* Sources */,
@@ -255,14 +255,14 @@
 			dependencies = (
 				00E356F51AD99517003FC87E /* PBXTargetDependency */,
 			);
-			name = AstraCoreTests;
-			productName = AstraCoreTests;
-			productReference = 00E356EE1AD99517003FC87E /* AstraCoreTests.xctest */;
+			name = MinersWorldCoinTests;
+			productName = MinersWorldCoinTests;
+			productReference = 00E356EE1AD99517003FC87E /* MinersWorldCoinTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
-		13B07F861A680F5B00A75B9A /* AstraCore */ = {
+		13B07F861A680F5B00A75B9A /* MinersWorldCoin */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "AstraCore" */;
+			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "MinersWorldCoin" */;
 			buildPhases = (
 				5E218638B7D4547E7965AC38 /* [CP] Check Pods Manifest.lock */,
 				FD10A7F022414F080027D42C /* Start Packager */,
@@ -276,14 +276,14 @@
 			);
 			dependencies = (
 			);
-			name = AstraCore;
-			productName = AstraCore;
-			productReference = 13B07F961A680F5B00A75B9A /* AstraCore Wallet.app */;
+			name = MinersWorldCoin;
+			productName = MinersWorldCoin;
+			productReference = 13B07F961A680F5B00A75B9A /* MinersWorldCoin Wallet.app */;
 			productType = "com.apple.product-type.application";
 		};
-		2D02E47A1E0B4A5D006451C7 /* AstraCore-tvOS */ = {
+		2D02E47A1E0B4A5D006451C7 /* MinersWorldCoin-tvOS */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 2D02E4BA1E0B4A5E006451C7 /* Build configuration list for PBXNativeTarget "AstraCore-tvOS" */;
+			buildConfigurationList = 2D02E4BA1E0B4A5E006451C7 /* Build configuration list for PBXNativeTarget "MinersWorldCoin-tvOS" */;
 			buildPhases = (
 				C5EDA35122CCD6BC2A1D1BFB /* [CP] Check Pods Manifest.lock */,
 				FD10A7F122414F3F0027D42C /* Start Packager */,
@@ -296,14 +296,14 @@
 			);
 			dependencies = (
 			);
-			name = "AstraCore-tvOS";
-			productName = "AstraCore-tvOS";
-			productReference = 2D02E47B1E0B4A5D006451C7 /* AstraCore-tvOS.app */;
+			name = "MinersWorldCoin-tvOS";
+			productName = "MinersWorldCoin-tvOS";
+			productReference = 2D02E47B1E0B4A5D006451C7 /* MinersWorldCoin-tvOS.app */;
 			productType = "com.apple.product-type.application";
 		};
-		2D02E48F1E0B4A5D006451C7 /* AstraCore-tvOSTests */ = {
+		2D02E48F1E0B4A5D006451C7 /* MinersWorldCoin-tvOSTests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 2D02E4BB1E0B4A5E006451C7 /* Build configuration list for PBXNativeTarget "AstraCore-tvOSTests" */;
+			buildConfigurationList = 2D02E4BB1E0B4A5E006451C7 /* Build configuration list for PBXNativeTarget "MinersWorldCoin-tvOSTests" */;
 			buildPhases = (
 				0683425C1E911E7F19791782 /* [CP] Check Pods Manifest.lock */,
 				2D02E48C1E0B4A5D006451C7 /* Sources */,
@@ -315,9 +315,9 @@
 			dependencies = (
 				2D02E4921E0B4A5D006451C7 /* PBXTargetDependency */,
 			);
-			name = "AstraCore-tvOSTests";
-			productName = "AstraCore-tvOSTests";
-			productReference = 2D02E4901E0B4A5D006451C7 /* AstraCore-tvOSTests.xctest */;
+			name = "MinersWorldCoin-tvOSTests";
+			productName = "MinersWorldCoin-tvOSTests";
+			productReference = 2D02E4901E0B4A5D006451C7 /* MinersWorldCoin-tvOSTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
 /* End PBXNativeTarget section */
@@ -347,7 +347,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 83CBB9FA1A601CBA00E9B192 /* Build configuration list for PBXProject "AstraCore" */;
+			buildConfigurationList = 83CBB9FA1A601CBA00E9B192 /* Build configuration list for PBXProject "MinersWorldCoin" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -360,10 +360,10 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				13B07F861A680F5B00A75B9A /* AstraCore */,
-				00E356ED1AD99517003FC87E /* AstraCoreTests */,
-				2D02E47A1E0B4A5D006451C7 /* AstraCore-tvOS */,
-				2D02E48F1E0B4A5D006451C7 /* AstraCore-tvOSTests */,
+				13B07F861A680F5B00A75B9A /* MinersWorldCoin */,
+				00E356ED1AD99517003FC87E /* MinersWorldCoinTests */,
+				2D02E47A1E0B4A5D006451C7 /* MinersWorldCoin-tvOS */,
+				2D02E48F1E0B4A5D006451C7 /* MinersWorldCoin-tvOSTests */,
 			);
 		};
 /* End PBXProject section */
@@ -432,7 +432,7 @@
 			outputFileListPaths = (
 			);
 			outputPaths = (
-				"$(DERIVED_FILE_DIR)/Pods-AstraCore-tvOSTests-checkManifestLockResult.txt",
+				"$(DERIVED_FILE_DIR)/Pods-MinersWorldCoin-tvOSTests-checkManifestLockResult.txt",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -445,7 +445,7 @@
 			files = (
 			);
 			inputPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-AstraCore-AstraCoreTests/Pods-AstraCore-AstraCoreTests-resources.sh",
+				"${PODS_ROOT}/Target Support Files/Pods-MinersWorldCoin-MinersWorldCoinTests/Pods-MinersWorldCoin-MinersWorldCoinTests-resources.sh",
 				"${PODS_ROOT}/../../node_modules/react-native-vector-icons/Fonts/AntDesign.ttf",
 				"${PODS_ROOT}/../../node_modules/react-native-vector-icons/Fonts/Entypo.ttf",
 				"${PODS_ROOT}/../../node_modules/react-native-vector-icons/Fonts/EvilIcons.ttf",
@@ -484,7 +484,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-AstraCore-AstraCoreTests/Pods-AstraCore-AstraCoreTests-resources.sh\"\n";
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-MinersWorldCoin-MinersWorldCoinTests/Pods-MinersWorldCoin-MinersWorldCoinTests-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
 		2D02E4CB1E0B4B27006451C7 /* Bundle React Native Code And Images */ = {
@@ -507,7 +507,7 @@
 			files = (
 			);
 			inputPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-AstraCore/Pods-AstraCore-resources.sh",
+				"${PODS_ROOT}/Target Support Files/Pods-MinersWorldCoin/Pods-MinersWorldCoin-resources.sh",
 				"${PODS_ROOT}/../../node_modules/react-native-vector-icons/Fonts/AntDesign.ttf",
 				"${PODS_ROOT}/../../node_modules/react-native-vector-icons/Fonts/Entypo.ttf",
 				"${PODS_ROOT}/../../node_modules/react-native-vector-icons/Fonts/EvilIcons.ttf",
@@ -546,7 +546,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-AstraCore/Pods-AstraCore-resources.sh\"\n";
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-MinersWorldCoin/Pods-MinersWorldCoin-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
 		5E218638B7D4547E7965AC38 /* [CP] Check Pods Manifest.lock */ = {
@@ -564,7 +564,7 @@
 			outputFileListPaths = (
 			);
 			outputPaths = (
-				"$(DERIVED_FILE_DIR)/Pods-AstraCore-checkManifestLockResult.txt",
+				"$(DERIVED_FILE_DIR)/Pods-MinersWorldCoin-checkManifestLockResult.txt",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -586,7 +586,7 @@
 			outputFileListPaths = (
 			);
 			outputPaths = (
-				"$(DERIVED_FILE_DIR)/Pods-AstraCore-AstraCoreTests-checkManifestLockResult.txt",
+				"$(DERIVED_FILE_DIR)/Pods-MinersWorldCoin-MinersWorldCoinTests-checkManifestLockResult.txt",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -608,7 +608,7 @@
 			outputFileListPaths = (
 			);
 			outputPaths = (
-				"$(DERIVED_FILE_DIR)/Pods-AstraCore-tvOS-checkManifestLockResult.txt",
+				"$(DERIVED_FILE_DIR)/Pods-MinersWorldCoin-tvOS-checkManifestLockResult.txt",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -660,7 +660,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				00E356F31AD99517003FC87E /* AstraCoreTests.m in Sources */,
+				00E356F31AD99517003FC87E /* MinersWorldCoinTests.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -686,7 +686,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				2DCD954D1E0B4F2C00145EB5 /* AstraCoreTests.m in Sources */,
+				2DCD954D1E0B4F2C00145EB5 /* MinersWorldCoinTests.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -695,12 +695,12 @@
 /* Begin PBXTargetDependency section */
 		00E356F51AD99517003FC87E /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 13B07F861A680F5B00A75B9A /* AstraCore */;
+			target = 13B07F861A680F5B00A75B9A /* MinersWorldCoin */;
 			targetProxy = 00E356F41AD99517003FC87E /* PBXContainerItemProxy */;
 		};
 		2D02E4921E0B4A5D006451C7 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 2D02E47A1E0B4A5D006451C7 /* AstraCore-tvOS */;
+			target = 2D02E47A1E0B4A5D006451C7 /* MinersWorldCoin-tvOS */;
 			targetProxy = 2D02E4911E0B4A5D006451C7 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -712,7 +712,7 @@
 				13B07FB21A68108700A75B9A /* Base */,
 			);
 			name = LaunchScreen.xib;
-			path = AstraCore;
+			path = MinersWorldCoin;
 			sourceTree = "<group>";
 		};
 /* End PBXVariantGroup section */
@@ -720,14 +720,14 @@
 /* Begin XCBuildConfiguration section */
 		00E356F61AD99517003FC87E /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 40BB007C193EBA72FCAB0BA5 /* Pods-AstraCore-AstraCoreTests.debug.xcconfig */;
+			baseConfigurationReference = 40BB007C193EBA72FCAB0BA5 /* Pods-MinersWorldCoin-MinersWorldCoinTests.debug.xcconfig */;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"DEBUG=1",
 					"$(inherited)",
 				);
-				INFOPLIST_FILE = AstraCoreTests/Info.plist;
+				INFOPLIST_FILE = MinersWorldCoinTests/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				OTHER_LDFLAGS = (
@@ -737,17 +737,17 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "org.reactjs.native.example.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/AstraCore.app/AstraCore";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/MinersWorldCoin.app/MinersWorldCoin";
 			};
 			name = Debug;
 		};
 		00E356F71AD99517003FC87E /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 9F43DA2873413A3560E0342A /* Pods-AstraCore-AstraCoreTests.release.xcconfig */;
+			baseConfigurationReference = 9F43DA2873413A3560E0342A /* Pods-MinersWorldCoin-MinersWorldCoinTests.release.xcconfig */;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				COPY_PHASE_STRIP = NO;
-				INFOPLIST_FILE = AstraCoreTests/Info.plist;
+				INFOPLIST_FILE = MinersWorldCoinTests/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				OTHER_LDFLAGS = (
@@ -757,13 +757,13 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "org.reactjs.native.example.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/AstraCore.app/AstraCore";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/MinersWorldCoin.app/MinersWorldCoin";
 			};
 			name = Release;
 		};
 		13B07F941A680F5B00A75B9A /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 58253118A06A10EC74626221 /* Pods-AstraCore.debug.xcconfig */;
+			baseConfigurationReference = 58253118A06A10EC74626221 /* Pods-MinersWorldCoin.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
@@ -774,15 +774,15 @@
 					"$(inherited)",
 					"FB_SONARKIT_ENABLED=1",
 				);
-				INFOPLIST_FILE = AstraCore/Info.plist;
+				INFOPLIST_FILE = MinersWorldCoin/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.AstraCore;
-				PRODUCT_NAME = "AstraCore Wallet";
+				PRODUCT_BUNDLE_IDENTIFIER = com.MinersWorldCoin;
+				PRODUCT_NAME = "MinersWorldCoin Wallet";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
@@ -791,21 +791,21 @@
 		};
 		13B07F951A680F5B00A75B9A /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 5791223FB51AFF09E4C623EA /* Pods-AstraCore.release.xcconfig */;
+			baseConfigurationReference = 5791223FB51AFF09E4C623EA /* Pods-MinersWorldCoin.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = JSG4U3MS6F;
-				INFOPLIST_FILE = AstraCore/Info.plist;
+				INFOPLIST_FILE = MinersWorldCoin/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.AstraCore;
-				PRODUCT_NAME = "AstraCore Wallet";
+				PRODUCT_BUNDLE_IDENTIFIER = com.MinersWorldCoin;
+				PRODUCT_NAME = "MinersWorldCoin Wallet";
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
 			};
@@ -813,7 +813,7 @@
 		};
 		2D02E4971E0B4A5E006451C7 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = E68073FD2F57CB262CE72605 /* Pods-AstraCore-tvOS.debug.xcconfig */;
+			baseConfigurationReference = E68073FD2F57CB262CE72605 /* Pods-MinersWorldCoin-tvOS.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = "App Icon & Top Shelf Image";
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
@@ -824,14 +824,14 @@
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_TESTABILITY = YES;
 				GCC_NO_COMMON_BLOCKS = YES;
-				INFOPLIST_FILE = "AstraCore-tvOS/Info.plist";
+				INFOPLIST_FILE = "MinersWorldCoin-tvOS/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "org.reactjs.native.example.AstraCore-tvOS";
+				PRODUCT_BUNDLE_IDENTIFIER = "org.reactjs.native.example.MinersWorldCoin-tvOS";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = appletvos;
 				TARGETED_DEVICE_FAMILY = 3;
@@ -841,7 +841,7 @@
 		};
 		2D02E4981E0B4A5E006451C7 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = FF3991B64406C9E345C00716 /* Pods-AstraCore-tvOS.release.xcconfig */;
+			baseConfigurationReference = FF3991B64406C9E345C00716 /* Pods-MinersWorldCoin-tvOS.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = "App Icon & Top Shelf Image";
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
@@ -852,14 +852,14 @@
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				GCC_NO_COMMON_BLOCKS = YES;
-				INFOPLIST_FILE = "AstraCore-tvOS/Info.plist";
+				INFOPLIST_FILE = "MinersWorldCoin-tvOS/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "org.reactjs.native.example.AstraCore-tvOS";
+				PRODUCT_BUNDLE_IDENTIFIER = "org.reactjs.native.example.MinersWorldCoin-tvOS";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = appletvos;
 				TARGETED_DEVICE_FAMILY = 3;
@@ -869,7 +869,7 @@
 		};
 		2D02E4991E0B4A5E006451C7 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 4713B20CEC21971D1F389216 /* Pods-AstraCore-tvOSTests.debug.xcconfig */;
+			baseConfigurationReference = 4713B20CEC21971D1F389216 /* Pods-MinersWorldCoin-tvOSTests.debug.xcconfig */;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CLANG_ANALYZER_NONNULL = YES;
@@ -879,24 +879,24 @@
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_TESTABILITY = YES;
 				GCC_NO_COMMON_BLOCKS = YES;
-				INFOPLIST_FILE = "AstraCore-tvOSTests/Info.plist";
+				INFOPLIST_FILE = "MinersWorldCoin-tvOSTests/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "org.reactjs.native.example.AstraCore-tvOSTests";
+				PRODUCT_BUNDLE_IDENTIFIER = "org.reactjs.native.example.MinersWorldCoin-tvOSTests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = appletvos;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/AstraCore-tvOS.app/AstraCore-tvOS";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/MinersWorldCoin-tvOS.app/MinersWorldCoin-tvOS";
 				TVOS_DEPLOYMENT_TARGET = 10.1;
 			};
 			name = Debug;
 		};
 		2D02E49A1E0B4A5E006451C7 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 99C4DFC02D5AFD2221208DA3 /* Pods-AstraCore-tvOSTests.release.xcconfig */;
+			baseConfigurationReference = 99C4DFC02D5AFD2221208DA3 /* Pods-MinersWorldCoin-tvOSTests.release.xcconfig */;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CLANG_ANALYZER_NONNULL = YES;
@@ -906,17 +906,17 @@
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				GCC_NO_COMMON_BLOCKS = YES;
-				INFOPLIST_FILE = "AstraCore-tvOSTests/Info.plist";
+				INFOPLIST_FILE = "MinersWorldCoin-tvOSTests/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "org.reactjs.native.example.AstraCore-tvOSTests";
+				PRODUCT_BUNDLE_IDENTIFIER = "org.reactjs.native.example.MinersWorldCoin-tvOSTests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = appletvos;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/AstraCore-tvOS.app/AstraCore-tvOS";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/MinersWorldCoin-tvOS.app/MinersWorldCoin-tvOS";
 				TVOS_DEPLOYMENT_TARGET = 10.1;
 			};
 			name = Release;
@@ -1037,7 +1037,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		00E357021AD99517003FC87E /* Build configuration list for PBXNativeTarget "AstraCoreTests" */ = {
+		00E357021AD99517003FC87E /* Build configuration list for PBXNativeTarget "MinersWorldCoinTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				00E356F61AD99517003FC87E /* Debug */,
@@ -1046,7 +1046,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "AstraCore" */ = {
+		13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "MinersWorldCoin" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				13B07F941A680F5B00A75B9A /* Debug */,
@@ -1055,7 +1055,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		2D02E4BA1E0B4A5E006451C7 /* Build configuration list for PBXNativeTarget "AstraCore-tvOS" */ = {
+		2D02E4BA1E0B4A5E006451C7 /* Build configuration list for PBXNativeTarget "MinersWorldCoin-tvOS" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				2D02E4971E0B4A5E006451C7 /* Debug */,
@@ -1064,7 +1064,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		2D02E4BB1E0B4A5E006451C7 /* Build configuration list for PBXNativeTarget "AstraCore-tvOSTests" */ = {
+		2D02E4BB1E0B4A5E006451C7 /* Build configuration list for PBXNativeTarget "MinersWorldCoin-tvOSTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				2D02E4991E0B4A5E006451C7 /* Debug */,
@@ -1073,7 +1073,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		83CBB9FA1A601CBA00E9B192 /* Build configuration list for PBXProject "AstraCore" */ = {
+		83CBB9FA1A601CBA00E9B192 /* Build configuration list for PBXProject "MinersWorldCoin" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				83CBBA201A601CBA00E9B192 /* Debug */,

@@ -18,7 +18,7 @@
 	"addAddress.incorrectAddressAlert": "Forkert adresse!",
 	"addAddress.confirmAlertButton": "OK",
 	"addAddress.nameTooltipText": "Mindst 3 tegn",
-	"addAddress.addressTooltipText": "Skal være en AstraCore adresse",
+	"addAddress.addressTooltipText": "Skal være en MinersWorldCoin adresse",
 	"addAddress.nameInput": "Navn",
 	"addAddress.addressInput": "Adresse",
 	"addAddress.addButton": "Tilføj",
@@ -41,8 +41,8 @@
 	"createWallet.createWalletButton": "Ja",
 
 	// First wallet screen
-	"firstWallet.firstLineTitle": "ASTRACORE WALLET", // DO_NOT_TRANSLATE
-	"firstWallet.moto":"In AstraCore We Trust", // DO_NOT_TRANSLATE
+	"firstWallet.firstLineTitle": "MINERSWORLDCOIN WALLET", // DO_NOT_TRANSLATE
+	"firstWallet.moto":"In MinersWorldCoin We Trust", // DO_NOT_TRANSLATE
 	"firstWallet.tooltipText": "For at begynde at bruge appen skal du trykke på en af knapperne nedenfor",
 	"firstWallet.createButton": "Opret ny tegnebog",
 	"firstWallet.importButton": "Importer tegnebog",
@@ -116,7 +116,7 @@
 	"send.toText": "Til",
 	"send.feeText": "Afgift",
 	"send.amountText": "Beløb",
-	"send.addressExampleInput": "sugar1qcu07vm47ceh7lec3umx7nv7e8tm8r8zw4l2uyx",
+	"send.addressExampleInput": "9ExTRgiy5KqRtRurVUD2oBoUKNLMYn68tD",
 	"send.confirmButton": "Bekræft",
 	"send.successAlert": "Succes!",
 	"send.errorAlert": "Fejl ved afsendelse af transaktion!",
@@ -167,7 +167,7 @@
 
 	// Wallet screen
 	"wallet.title": "Tegnebog",
-	"wallet.coinTitle": "ASTC", // DO_NOT_TRANSLATE
+	"wallet.coinTitle": "MWC", // DO_NOT_TRANSLATE
 	"wallet.empty": "Tegnebog historikken er tom. Få dine første mønter ind",
 	"wallet.emptyReceiveTab": "Modtag",
 	"wallet.networkStatusTitle": "Netværksstatus",

@@ -1,5 +1,5 @@
 {
-  "name": "AstraCore",
+  "name": "MinersWorldCoin",
   "version": "0.0.1",
   "private": true,
   "scripts": {
@@ -11,8 +11,7 @@
   },
   "dependencies": {
     "@polkadot/reactnative-identicon": "^0.52.1",
-    "@react-native-async-storage/async-storage": "^3.0.1",
-    "@react-native-community/async-storage": "^1.6.1",
+    "@react-native-async-storage/async-storage": "1.17.11",
     "@react-native-community/datetimepicker": "^2.4.0",
     "@react-native-community/toolbar-android": "^0.2.1",
     "@tradle/react-native-http": "^2.0.1",
@@ -25,7 +24,7 @@
     "bluebird": "^3.7.1",
     "browserify-zlib": "^0.1.4",
     "bs58check": "2.1.2",
-    "buffer": "^4.9.1",
+    "buffer": "^6.0.3",
     "coinjs": "https://github.com/olexh/coinjs-react-native.git",
     "console-browserify": "^1.1.0",
     "constants-browserify": "^1.0.0",
@@ -81,6 +80,7 @@
     "socket.io-client": "1.7.2",
     "stream-browserify": "^1.0.0",
     "string_decoder": "^0.10.31",
+    "text-encoding": "^0.7.0",
     "timers-browserify": "^1.4.2",
     "tty-browserify": "0.0.0",
     "url": "^0.10.3",

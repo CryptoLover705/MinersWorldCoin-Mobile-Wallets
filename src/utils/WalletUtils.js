@@ -8,13 +8,13 @@ import Config from 'react-native-config';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const hashType = bitcoin.Transaction.SIGHASH_ALL;
-const astc = {
-	messagePrefix: '\x19AstraCore Signed Message:\n',
+const mwc = {
+	messagePrefix: '\x19MinersWorldCoin Signed Message:\n',
 	bip32: {
 	  public: 0x0488b21e,
   	  private: 0x0488ade4
 	},
-	bech32: 'astc',
+	bech32: 'mwc',
 	pubKeyHash: parseInt(Config.PUB_KEY_HASH),
 	scriptHash: parseInt(Config.SCRIPT_HASH),
 	wif: parseInt(Config.WIF),
@@ -104,7 +104,7 @@ function cltvOutput(address, lockTime) {
 	  bitcoin.opcodes.OP_DROP,
 	  bitcoin.opcodes.OP_DUP,
 	  bitcoin.opcodes.OP_HASH160,
-	  bitcoin.address.fromBase58Check(address, astc).hash,
+	  bitcoin.address.fromBase58Check(address, mwc).hash,
 	  bitcoin.opcodes.OP_EQUALVERIFY,
 	  bitcoin.opcodes.OP_CHECKSIG
 	])
@@ -117,13 +117,13 @@ function writeUInt64LE(buffer, value, offset) {
 }
 
 function getP2WPKHScript(publicKey) {
-  return bitcoin.payments.p2wpkh({ pubkey: publicKey, network: astc });
+  return bitcoin.payments.p2wpkh({ pubkey: publicKey, network: mwc });
 }
 
 function getP2SHScript(redeem) {
 	return bitcoin.payments.p2sh({
 		'redeem': redeem,
-		'network': astc
+		'network': mwc
 	})
 }
 
@@ -169,11 +169,11 @@ export function getHDKey(seed) {
 
 export function isAddress(address) {
 	try {
-		bitcoin.address.fromBase58Check(address, astc)
+		bitcoin.address.fromBase58Check(address, mwc)
 		return true
 	} catch (e) {
 		try {
-			bitcoin.address.fromBech32(address, astc)
+			bitcoin.address.fromBech32(address, mwc)
 			return true
 		} catch (e) {
 			return false
@@ -183,8 +183,8 @@ export function isAddress(address) {
 
 export function importAddressByWIF(wif) {
 	try {
-		const keyPair = bitcoin.ECPair.fromWIF(wif, astc);
-		return getAddress(keyPair, astc);
+		const keyPair = bitcoin.ECPair.fromWIF(wif, mwc);
+		return getAddress(keyPair, mwc);
 	} catch (e) {
 		return null;
 	}
@@ -222,13 +222,13 @@ export function generateSeedPhrase(size = 12) {
 
 export function generateAddresses(seedPhrase, derivePath = "m/44'/0'/0'/0", startIndex = 0, endIndex = 0) {
     const seed = bip39.mnemonicToSeed(seedPhrase);
-	const root = bip32.fromSeed(seed, astc);
+	const root = bip32.fromSeed(seed, mwc);
     let addressList = {};
     let promises = [];
 
     for (var i = startIndex; i <= endIndex; i++) {
 		const child = root.derivePath(derivePath + "/" + i.toString());
-	    addressList[getAddress(child, astc)] = {index: i, privateKey: child.toWIF()};
+	    addressList[getAddress(child, mwc)] = {index: i, privateKey: child.toWIF()};
     }
 
     return addressList;
@@ -281,7 +281,7 @@ export async function sendTransation(socketConnect, walletAddresses, mainAddress
 	var outputsAmount = 0;
 	var keyPairs = [];
 	var scripts = [];
-    const txb = new bitcoin.TransactionBuilder(astc)
+    const txb = new bitcoin.TransactionBuilder(mwc)
 
     txb.setVersion(2);
 
@@ -307,7 +307,7 @@ export async function sendTransation(socketConnect, walletAddresses, mainAddress
 					var script = new Buffer(utxo[k].script, 'hex');
 					var type = getScriptType(script);
 
-					keyPairs.push(bitcoin.ECPair.fromWIF(walletAddresses[address].privateKey, astc));
+					keyPairs.push(bitcoin.ECPair.fromWIF(walletAddresses[address].privateKey, mwc));
 
 					if (type == 'bech32') {
 						var p2wpkh = getP2WPKHScript(keyPairs[k].publicKey)

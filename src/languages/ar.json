@@ -18,7 +18,7 @@
 	"addAddress.incorrectAddressAlert": "العنوان غير صالح",
 	"addAddress.confirmAlertButton": "موافق",
 	"addAddress.nameTooltipText": "3 أحرف على الأقل ",
-	"addAddress.addressTooltipText": "يجب أن يكون عنوان astracore",
+	"addAddress.addressTooltipText": "يجب أن يكون عنوان minersworldcoin",
 	"addAddress.nameInput": "الاسم",
 	"addAddress.addressInput": "العنوان",
 	"addAddress.addButton": "اضافة",
@@ -41,8 +41,8 @@
 	"createWallet.createWalletButton": "نعم",
 
 	// First wallet screen
-	"firstWallet.firstLineTitle": "ASTRACORE WALLET", // DO_NOT_TRANSLATE
-	"firstWallet.moto":"In AstraCore We Trust", // DO_NOT_TRANSLATE
+	"firstWallet.firstLineTitle": "MINERSWORLDCOIN WALLET", // DO_NOT_TRANSLATE
+	"firstWallet.moto":"In MinersWorldCoin We Trust", // DO_NOT_TRANSLATE
 	"firstWallet.tooltipText": "لتبدأ باستخدام التطبيق اضغط على الازرار بالأسفل",
 	"firstWallet.createButton": "انشاء محفظة جديدة",
 	"firstWallet.importButton": "استيراد محفظة",
@@ -116,7 +116,7 @@
 	"send.toText": "الى",
 	"send.feeText": "الرسوم الضريبية",
 	"send.amountText": "الكمية",
-	"send.addressExampleInput": "sugar1qcu07vm47ceh7lec3umx7nv7e8tm8r8zw4l2uyx",
+	"send.addressExampleInput": "9ExTRgiy5KqRtRurVUD2oBoUKNLMYn68tD",
 	"send.confirmButton": "تأكيد",
 	"send.successAlert": "نجاح",
 	"send.errorAlert": "خطأ في إرسال المعاملة ",
@@ -167,7 +167,7 @@
 
 	// Wallet screen
 	"wallet.title": "المحفظة",
-	"wallet.coinTitle": "ASTC", // DO_NOT_TRANSLATE
+	"wallet.coinTitle": "MWC", // DO_NOT_TRANSLATE
 	"wallet.empty": "سجل المحفظة فارغ قم بأدخال اول عملة معدنية ",
 	"wallet.emptyReceiveTab": "تبويب الأستلام",
 	"wallet.networkStatusTitle": "حالة الشبكة",

@@ -41,8 +41,8 @@
 	"createWallet.createWalletButton": "네",
 
 	// First wallet screen
-	// DO_NOT_TRANSLATE "firstWallet.firstLineTitle": "ASTRACORE WALLET",
-	// DO_NOT_TRANSLATE "firstWallet.moto":"In AstraCore We Trust",
+	// DO_NOT_TRANSLATE "firstWallet.firstLineTitle": "MINERSWORLDCOIN WALLET",
+	// DO_NOT_TRANSLATE "firstWallet.moto":"In MinersWorldCoin We Trust",
 	"firstWallet.tooltipText": "시작하려면 아래 버튼중 하나를 탭하세요",
 	"firstWallet.createButton": "지갑 생성하기",
 	"firstWallet.importButton": "지갑 복구하기",
@@ -116,7 +116,7 @@
 	"send.toText": "받는곳",
 	"send.feeText": "수수료",
 	"send.amountText": "전송량",
-	"send.addressExampleInput": "sugar1qcu07vm47ceh7lec3umx7nv7e8tm8r8zw4l2uyx",
+	"send.addressExampleInput": "9ExTRgiy5KqRtRurVUD2oBoUKNLMYn68tD",
 	"send.confirmButton": "확인",
 	"send.successAlert": "성공!",
 	"send.errorAlert": "전송에 실패했습니다!",
@@ -167,7 +167,7 @@
 
 	// Wallet screen
 	"wallet.title": "지갑",
-	// DO_NOT_TRANSLATE "wallet.coinTitle": "ASTC",
+	// DO_NOT_TRANSLATE "wallet.coinTitle": "MWC",
 	"wallet.empty": "전송 내역이 비어있습니다. 코인을 전송해주세요.",
 	"wallet.emptyReceiveTab": "받기 탭",
 	"wallet.networkStatusTitle": "네트워크 상태",

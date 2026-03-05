@@ -7,11 +7,11 @@
 #define TIMEOUT_SECONDS 600
 #define TEXT_TO_LOOK_FOR @"Welcome to React"
 
-@interface AstraCoreTests : XCTestCase
+@interface MinersWorldCoinTests : XCTestCase
 
 @end
 
-@implementation AstraCoreTests
+@implementation MinersWorldCoinTests
 
 - (BOOL)findSubviewInView:(UIView *)view matching:(BOOL(^)(UIView *view))test
 {

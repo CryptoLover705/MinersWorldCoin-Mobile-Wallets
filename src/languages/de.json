@@ -18,7 +18,7 @@
 	"addAddress.incorrectAddressAlert": "Adresse inkorrekt!",
 	"addAddress.confirmAlertButton": "OK",
 	"addAddress.nameTooltipText": "Mindestens 3 Zeichen",
-	"addAddress.addressTooltipText": "Keine AstraCore-Adresse! (beginnt immer mit Astc)",
+	"addAddress.addressTooltipText": "Keine MinersWorldCoin-Adresse! (beginnt immer mit Mwc)",
 	"addAddress.nameInput": "Name",
 	"addAddress.addressInput": "Addresse",
 	"addAddress.addButton": "Hinzufügen",
@@ -41,8 +41,8 @@
 	"createWallet.createWalletButton": "Ja",
 
 	// First wallet screen
-	"firstWallet.firstLineTitle": "ASTRACORE WALLET", // DO_NOT_TRANSLATE
-	"firstWallet.moto":"In AstraCore We Trust", // DO_NOT_TRANSLATE
+	"firstWallet.firstLineTitle": "MINERSWORLDCOIN WALLET", // DO_NOT_TRANSLATE
+	"firstWallet.moto":"In MinersWorldCoin We Trust", // DO_NOT_TRANSLATE
 	"firstWallet.tooltipText": "Zur Nutzung der App bitte auf einen der unteren Buttons tippen",
 	"firstWallet.createButton": "Neue Wallet erstellen",
 	"firstWallet.importButton": "Wallet importieren",
@@ -116,7 +116,7 @@
 	"send.toText": "An",
 	"send.feeText": "Gebühr",
 	"send.amountText": "Betrag",
-	"send.addressExampleInput": "sugar1qcu07vm47ceh7lec3umx7nv7e8tm8r8zw4l2uyx",
+	"send.addressExampleInput": "9ExTRgiy5KqRtRurVUD2oBoUKNLMYn68tD",
 	"send.confirmButton": "Bestätige",
 	"send.successAlert": "Erfolgreich!",
 	"send.errorAlert": "Fehler beim Senden der Zahlung",
@@ -167,7 +167,7 @@
 
 	// Wallet screen
 	"wallet.title": "Meine Wallet",
-	"wallet.coinTitle": "ASTC", // DO_NOT_TRANSLATE
+	"wallet.coinTitle": "MWC", // DO_NOT_TRANSLATE
 	"wallet.empty": "Deine Wallet weist noch kein Guthaben auf. Sende erste Coins an Deine Wallet",
 	"wallet.emptyReceiveTab": "Zahlungen empfangen",
 	"wallet.networkStatusTitle": "Netzwerkstatus",

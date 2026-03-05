@@ -18,7 +18,7 @@
 	"addAddress.incorrectAddressAlert": "Неправильна адреса!",
 	"addAddress.confirmAlertButton": "OK",
 	"addAddress.nameTooltipText": "Мінімум 3 символи",
-	"addAddress.addressTooltipText": "Повинна бути AstraCore адреса",
+	"addAddress.addressTooltipText": "Повинна бути MinersWorldCoin адреса",
 	"addAddress.nameInput": "Назва",
 	"addAddress.addressInput": "Адреса",
 	"addAddress.addButton": "Додати",
@@ -41,8 +41,8 @@
 	"createWallet.createWalletButton": "Так",
 
 	// First wallet screen
-	"firstWallet.firstLineTitle": "ASTRACORE WALLET", // DO_NOT_TRANSLATE
-	"firstWallet.moto":"In AstraCore We Trust", // DO_NOT_TRANSLATE
+	"firstWallet.firstLineTitle": "MINERSWORLDCOIN WALLET", // DO_NOT_TRANSLATE
+	"firstWallet.moto":"In MinersWorldCoin We Trust", // DO_NOT_TRANSLATE
 	"firstWallet.tooltipText": "Щоб розпочати користування додатком, натисніть на одну з нижче представлених кнопок",
 	"firstWallet.createButton": "Створити новий гаманець",
 	"firstWallet.importButton": "Імпортувати гаманець",
@@ -116,7 +116,7 @@
 	"send.toText": "До",
 	"send.feeText": "Комісія",
 	"send.amountText": "Кількість",
-	"send.addressExampleInput": "sugar1qcu07vm47ceh7lec3umx7nv7e8tm8r8zw4l2uyx",
+	"send.addressExampleInput": "9ExTRgiy5KqRtRurVUD2oBoUKNLMYn68tD",
 	"send.confirmButton": "Підтвердити",
 	"send.successAlert": "Успішно!",
 	"send.errorAlert": "Помилка надсилання транзакції!",
@@ -167,7 +167,7 @@
 
 	// Wallet screen
 	"wallet.title": "Гаманець",
-	"wallet.coinTitle": "ASTC", // DO_NOT_TRANSLATE
+	"wallet.coinTitle": "MWC", // DO_NOT_TRANSLATE
 	"wallet.empty": "Історія гаманця пуста. Отримайте свої перші монети у",
 	"wallet.emptyReceiveTab": "Вкладка Отримати",
 	"wallet.networkStatusTitle": "Статус мережі",

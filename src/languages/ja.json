@@ -18,7 +18,7 @@
 	"addAddress.incorrectAddressAlert": "無効なアドレスです。",
 	"addAddress.confirmAlertButton": "OK",
 	"addAddress.nameTooltipText": "3文字以上で入力",
-	"addAddress.addressTooltipText": "AstraCoreのアドレスを入力",
+	"addAddress.addressTooltipText": "MinersWorldCoinのアドレスを入力",
 	"addAddress.nameInput": "名前",
 	"addAddress.addressInput": "アドレス",
 	"addAddress.addButton": "追加",
@@ -41,8 +41,8 @@
 	"createWallet.createWalletButton": "はい",
 
 	// First wallet screen
-	"firstWallet.firstLineTitle": "ASTRACORE WALLET", // DO_NOT_TRANSLATE
-	"firstWallet.moto":"In AstraCore We Trust", // DO_NOT_TRANSLATE
+	"firstWallet.firstLineTitle": "MINERSWORLDCOIN WALLET", // DO_NOT_TRANSLATE
+	"firstWallet.moto":"In MinersWorldCoin We Trust", // DO_NOT_TRANSLATE
 	"firstWallet.tooltipText": "このアプリを使い始めるには、下のボタンのいずれかをタップしてください。",
 	"firstWallet.createButton": "新しいウォレットを作成",
 	"firstWallet.importButton": "ウォレットのインポート",
@@ -116,7 +116,7 @@
 	"send.toText": "送信先",
 	"send.feeText": "手数料",
 	"send.amountText": "金額",
-	"send.addressExampleInput": "sugar1qcu07vm47ceh7lec3umx7nv7e8tm8r8zw4l2uyx",
+	"send.addressExampleInput": "9ExTRgiy5KqRtRurVUD2oBoUKNLMYn68tD",
 	"send.confirmButton": "確認",
 	"send.successAlert": "成功",
 	"send.errorAlert": "エラー: トランザクション送信",
@@ -167,7 +167,7 @@
 
 	// Wallet screen
 	"wallet.title": "ウォレット",
-	"wallet.coinTitle": "ASTC", // DO_NOT_TRANSLATE
+	"wallet.coinTitle": "MWC", // DO_NOT_TRANSLATE
 	"wallet.empty": "ウォレットの履歴は空です。コインを入れましょう。",
 	"wallet.emptyReceiveTab": "受信タブを開いてください。",
 	"wallet.networkStatusTitle": "ネットワーク状況",
