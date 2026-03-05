@@ -1,17 +1,23 @@
 package com.astracore.wallet;
 
 import android.app.Application;
+
 import com.facebook.react.PackageList;
-import com.reactnativenavigation.NavigationApplication;
-import com.reactnativenavigation.react.NavigationPackage;
+import com.facebook.react.ReactApplication;
 import com.facebook.react.ReactNativeHost;
 import com.facebook.react.ReactPackage;
+
+import com.reactnativenavigation.NavigationApplication;
+import com.reactnativenavigation.react.NavigationReactNativeHost;
+import com.reactnativenavigation.react.NavigationPackage;
+
 import java.util.List;
 
 public class MainApplication extends NavigationApplication {
 
   private final ReactNativeHost mReactNativeHost =
       new NavigationReactNativeHost(this) {
+
         @Override
         public boolean getUseDeveloperSupport() {
           return BuildConfig.DEBUG;
@@ -19,10 +25,7 @@ public class MainApplication extends NavigationApplication {
 
         @Override
         protected List<ReactPackage> getPackages() {
-          @SuppressWarnings("UnnecessaryLocalVariable")
           List<ReactPackage> packages = new PackageList(this).getPackages();
-          // Packages that cannot be autolinked yet can be added manually here
-          // e.g. packages.add(new MyReactNativePackage());
           return packages;
         }
 
@@ -35,11 +38,5 @@ public class MainApplication extends NavigationApplication {
   @Override
   public ReactNativeHost getReactNativeHost() {
     return mReactNativeHost;
-  }
-
-  @Override
-  public void onCreate() {
-    super.onCreate();
-    // Flipper initialization removed
   }
 }
