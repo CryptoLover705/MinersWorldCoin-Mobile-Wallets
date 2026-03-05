@@ -5,7 +5,7 @@ import moment from "moment";
 import * as bitcoin from "bitcoinjs-lib";
 import * as aes256 from "aes256";
 import Config from 'react-native-config';
-import AsyncStorage from '@react-native-community/async-storage';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const hashType = bitcoin.Transaction.SIGHASH_ALL;
 const astc = {
