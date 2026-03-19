@@ -19,7 +19,7 @@ import { SETTINGS_SCREEN, CONFIRMATION_SCREEN, TRANSACTION_DETAILS_SCREEN, pushW
 import { Navigation } from 'react-native-navigation';
 import { connectWallet } from 'src/redux';
 import moment from "moment";
-import { subscribeToAddresses, getTransactionHistory, getBalance, isAddress, generateAddresses, checkMempool, numberWithCommas } from 'src/utils/WalletUtils';
+import { subscribeToAddresses, getTransactionHistory, getBalance, isAddress, generateAddresses, deriveGapLimitAddresses, checkMempool, numberWithCommas } from 'src/utils/WalletUtils';
 import Config from 'react-native-config';
 
 const styles = StyleSheet.create({
@@ -74,7 +74,7 @@ class WalletScreen extends PureComponent {
 
         this.state = {
             mempool: {},
-            isConnected: global.socketConnect.status(),
+            isConnected: global.socketConnect?.status() || global.connectionType === "api",
             appState: AppState.currentState,
             isRefreshing: false
         }
@@ -89,18 +89,31 @@ class WalletScreen extends PureComponent {
     }
 
     componentDidMount() {
-        AppState.addEventListener('change', this.handleAppStateChange);
-        this.firstOpen();
+        this.appStateListener = AppState.addEventListener('change', this.handleAppStateChange);
 
-        this.connectInterval = setInterval(() => {
-            this.setState({isConnected: global.socketConnect.status()})
-        }, 5000)
+        const socket = global.socketConnect.socket;
 
+        socket.on('connect', async () => {
+            console.log('🟢 Socket connected (WalletScreen)');
+            this.setState({ isConnected: true });
+
+            // 🔥 IMPORTANT: reload wallet when connection is ready
+            await this.firstOpen();
+        });
+
+        socket.on('disconnect', () => {
+            console.log('🔴 Socket disconnected (WalletScreen)');
+            this.setState({ isConnected: false });
+        });
+
+        // If already connected, run immediately
+        if (global.socketConnect.status()) {
+            this.setState({ isConnected: true });
+        }
     }
 
     componentWillUnmount() {
-        clearInterval(this.connectInterval);
-        AppState.removeEventListener('change', this.handleAppStateChange);
+        this.appStateListener.remove();
     }
 
     startCheckingMempool = (address = null) => {
@@ -138,12 +151,61 @@ class WalletScreen extends PureComponent {
         this.setState({appState: nextAppState});
     }
 
-    firstOpen = () => {
+    firstOpen = async () => {
+
         const { updateWalletValues, setWalletValues, timestamp } = this.props;
-        const { addresses, transactions, migrationData } = this.props.wallet[timestamp];
+
+        const wallet = this.props.wallet[timestamp];
+
+        const { addresses, transactions, seedPhrase, addressType } = wallet;
+
+        let derivedAddresses = addresses;
+
+        // If wallet has no addresses yet, derive the first one
+        if (!addresses || Object.keys(addresses).length === 0) {
+
+            let derivationPath;
+
+            if (addressType === "legacy") {
+                derivationPath = Config.DERIVATION_PATH_LEGACY + "0";
+            }
+            else if (addressType === "segwit") {
+                derivationPath = Config.DERIVATION_PATH_SEGWIT + "0";
+            }
+            else {
+                derivationPath = Config.DERIVATION_PATH + "0";
+            }
+
+            const newAddresses = await deriveGapLimitAddresses(
+                seedPhrase.join(" "),
+                derivationPath,
+                0,
+                20
+            );
+
+            const addr = Object.keys(newAddresses)[0];
+
+            derivedAddresses = newAddresses;
+
+            setWalletValues({
+                receiveAddress: addr,
+                timestamp
+            });
+
+            updateWalletValues({
+                addresses: newAddresses,
+                timestamp
+            });
+        }
 
         this.startCheckingMempool();
-        subscribeToAddresses(global.socketConnect, addresses, this.updateTransactionObjects);
+
+        subscribeToAddresses(
+            global.socketConnect,
+            derivedAddresses,
+            this.updateTransactionObjects
+        );
+
         this.refreshHistory();
 
     }

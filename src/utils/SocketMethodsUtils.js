@@ -1,59 +1,61 @@
 'use strict'
 const Client = require("./SocketUtils")
 
-class SocketMethods extends Client{
-    constructor(host){
+class SocketMethods extends Client {
+    constructor(host) {
         super(host)
     }
 
-    get_info(){
-        return this.request('general.info')
+    async get_info() {
+        // API health check or general info
+        return this.request('get_info')
     }
 
-    get_balance(address){
-        return this.request('address.balance', address)
+    async get_balance(address) {
+        return this.request('get_balance', address)
     }
 
-    get_unspent(address){
-        return this.request('address.unspent', address)
+    async get_unspent(address) {
+        return this.request('get_unspent', address)
     }
 
-    get_history(address){
-        return this.request('address.history', address)
+    async get_history(address) {
+        return this.request('get_history', address)
     }
 
-    get_mempool(address){
-        return this.request('address.mempool.raw', address)
+    async get_mempool(address) {
+        return this.request('get_mempool', address)
     }
 
-    get_transaction(transaction){
-        return this.request('transaction.info', transaction)
+    async get_transaction(transaction) {
+        return this.request('get_transaction', transaction)
     }
 
-    get_transaction_batch(transactions){
-        return this.request('transaction.batch', transactions)
+    async get_transaction_batch(transactions) {
+        return this.request('get_transaction_batch', transactions)
     }
 
-    get_general_fee(){
-        return this.request('general.fee')
+    async get_general_fee() {
+        return this.request('get_general_fee')
     }
 
-    check_addresses(addresses){
-        return this.request('address.check', addresses)
+    async check_addresses(addresses) {
+        return this.request('check_addresses', addresses)
     }
 
-    subscribe_blocks(){
-        return this.request('subscribe.blocks')
+    async subscribe_blocks() {
+        // HTTP-only → polling can replace later
+        return true
     }
 
-    subscribe_address(address){
-        return this.request('subscribe.address', address)
+    async subscribe_address(address) {
+        // HTTP-only → polling can replace later
+        return true
     }
 
-    broadcast_transaction(transaction){
-        return this.request('transaction.broadcast', transaction)
+    async broadcast_transaction(transaction) {
+        return this.request('broadcast_transaction', transaction)
     }
-
 }
 
 module.exports = SocketMethods
