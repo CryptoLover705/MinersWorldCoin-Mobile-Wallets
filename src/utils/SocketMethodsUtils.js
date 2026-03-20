@@ -1,61 +1,59 @@
 'use strict'
 const Client = require("./SocketUtils")
 
-class SocketMethods extends Client {
-    constructor(host) {
+class SocketMethods extends Client{
+    constructor(host){
         super(host)
     }
 
-    async get_info() {
-        // API health check or general info
-        return this.request('get_info')
+    get_info(){
+        return this.request('general.info')
     }
 
-    async get_balance(address) {
-        return this.request('get_balance', address)
+    get_balance(address){
+        return this.request('address.balance', address)
     }
 
-    async get_unspent(address) {
-        return this.request('get_unspent', address)
+    get_unspent(address){
+        return this.request('address.unspent', address)
     }
 
-    async get_history(address) {
-        return this.request('get_history', address)
+    get_history(address){
+        return this.request('address.history', address)
     }
 
-    async get_mempool(address) {
-        return this.request('get_mempool', address)
+    get_mempool(address){
+        return this.request('address.mempool.raw', address)
     }
 
-    async get_transaction(transaction) {
-        return this.request('get_transaction', transaction)
+    get_transaction(transaction){
+        return this.request('transaction.info', transaction)
     }
 
-    async get_transaction_batch(transactions) {
-        return this.request('get_transaction_batch', transactions)
+    get_transaction_batch(transactions){
+        return this.request('transaction.batch', transactions)
     }
 
-    async get_general_fee() {
-        return this.request('get_general_fee')
+    get_general_fee(){
+        return this.request('general.fee')
     }
 
-    async check_addresses(addresses) {
-        return this.request('check_addresses', addresses)
+    check_addresses(addresses){
+        return this.request('address.check', addresses)
     }
 
-    async subscribe_blocks() {
-        // HTTP-only → polling can replace later
-        return true
+    subscribe_blocks(){
+        return this.request('subscribe.blocks')
     }
 
-    async subscribe_address(address) {
-        // HTTP-only → polling can replace later
-        return true
+    subscribe_address(address){
+        return this.request('subscribe.address', address)
     }
 
-    async broadcast_transaction(transaction) {
-        return this.request('broadcast_transaction', transaction)
+    broadcast_transaction(transaction){
+        return this.request('transaction.broadcast', transaction)
     }
+
 }
 
 module.exports = SocketMethods

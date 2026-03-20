@@ -133,10 +133,7 @@ class SendScreen extends PureComponent {
             amount = parseFloat(amount.replace(",", "."));
         }
 
-        amount = parseFloat(amount);
-        fee = parseFloat(fee);
-
-        if (to && isAddress(to.trim()) && amount > 0 && fee > 0) {
+        if (isAddress(to) && amount > 0 && fee > 0) {
             Navigation.showModal({
                 stack: {
                     children: [{

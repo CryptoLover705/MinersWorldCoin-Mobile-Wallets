@@ -21,21 +21,6 @@ const mwc = {
 	dustThreshold: 0
 }
 
-export const ADDRESS_TYPES = {
-  LEGACY: "legacy",
-  SEGWIT: "segwit",
-  BECH32: "bech32"
-};
-
-export async function getSelectedAddressType() {
-  try {
-    const type = await AsyncStorage.getItem("addressType");
-    return type || ADDRESS_TYPES.BECH32;
-  } catch (e) {
-    return ADDRESS_TYPES.BECH32;
-  }
-}
-
 export function numberWithCommas(number) {
 	var parts = number.toString().split(".");
 	parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
@@ -160,36 +145,8 @@ function getScriptType(script) {
   return type
 }
 
-async function getAddress(node, network) {
-
-  const type = await getSelectedAddressType();
-
-  switch(type) {
-
-    case ADDRESS_TYPES.LEGACY:
-      return bitcoin.payments.p2pkh({
-        pubkey: node.publicKey,
-        network
-      }).address;
-
-    case ADDRESS_TYPES.SEGWIT:
-      const redeem = bitcoin.payments.p2wpkh({
-        pubkey: node.publicKey,
-        network
-      });
-
-      return bitcoin.payments.p2sh({
-        redeem,
-        network
-      }).address;
-
-    case ADDRESS_TYPES.BECH32:
-    default:
-      return bitcoin.payments.p2wpkh({
-        pubkey: node.publicKey,
-        network
-      }).address;
-  }
+function getAddress(node, network) {
+	return bitcoin.payments.p2wpkh({ pubkey: node.publicKey, network }).address;
 }
 
 function removeDuplicates(myArr, prop) {
@@ -263,7 +220,7 @@ export function generateSeedPhrase(size = 12) {
 	return seedPhrase;
 }
 
-export async function generateAddresses(seedPhrase, derivePath = "m/44'/0'/0'/0", startIndex = 0, endIndex = 0) {
+export function generateAddresses(seedPhrase, derivePath = "m/44'/0'/0'/0", startIndex = 0, endIndex = 0) {
     const seed = bip39.mnemonicToSeed(seedPhrase);
 	const root = bip32.fromSeed(seed, mwc);
     let addressList = {};
@@ -271,8 +228,7 @@ export async function generateAddresses(seedPhrase, derivePath = "m/44'/0'/0'/0"
 
     for (var i = startIndex; i <= endIndex; i++) {
 		const child = root.derivePath(derivePath + "/" + i.toString());
-	    const address = await getAddress(child, mwc);
-		addressList[address] = {index: i, privateKey: child.toWIF()};
+	    addressList[getAddress(child, mwc)] = {index: i, privateKey: child.toWIF()};
     }
 
     return addressList;
@@ -321,170 +277,129 @@ export async function findAddresses(socketConnect, seedPhrase, derivePath) {
     return findedAddressList;
 }
 
-export async function sendTransaction(socketConnect, walletAddresses, mainAddress, recieveAddress, amount, fee, timelock = 0) {
+export async function sendTransation(socketConnect, walletAddresses, mainAddress, recieveAddress, amount, fee, timelock = 0) {
+	var outputsAmount = 0;
+	var keyPairs = [];
+	var scripts = [];
+    const txb = new bitcoin.TransactionBuilder(mwc)
 
-    let allUtxos = [];
-    let keyMap = {};
-
-    const txb = new bitcoin.TransactionBuilder(mwc);
     txb.setVersion(2);
 
-    // 🔥 STEP 1: Collect ALL UTXOs
-    for (let address in walletAddresses) {
-        try {
-            let utxos = await socketConnect.get_unspent(address);
+	for (var address in walletAddresses) {
+		var balance = null;
 
-            for (let utxo of utxos) {
-                allUtxos.push({
-                    ...utxo,
-                    address
-                });
-            }
+		try {
+			balance = await socketConnect.get_balance(address);
+		} catch (e) {
+			console.log(e);
+		}
 
-            keyMap[address] = bitcoin.ECPair.fromWIF(walletAddresses[address].privateKey, mwc);
+		if (balance != null && (balance.balance > 0)) {
+			try {
+				let utxo = await socketConnect.get_unspent(address);
 
-        } catch (e) {
-            console.log(e);
-        }
-    }
+				for (var k = 0; k < utxo.length; k++) {
 
-    if (allUtxos.length === 0) {
-        return { error: "No UTXOs available" };
-    }
+					if (parseInt(outputsAmount-amount-fee) > 0) {
+						break;
+					}
 
-    const target = parseInt(amount);
+					var script = new Buffer(utxo[k].script, 'hex');
+					var type = getScriptType(script);
 
-    let selection;
+					keyPairs.push(bitcoin.ECPair.fromWIF(walletAddresses[address].privateKey, mwc));
 
-    // 🔥 STEP 2: Use proper UTXO selection
-    try {
-        selection = selectUTXOs(allUtxos, target, 1);
-    } catch (e) {
-        return { error: "Insufficient funds" };
-    }
+					if (type == 'bech32') {
+						var p2wpkh = getP2WPKHScript(keyPairs[k].publicKey)
+						txb.addInput(utxo[k].txid, utxo[k].index, null, p2wpkh.output);
+					} else {
+						txb.addInput(utxo[k].txid, utxo[k].index);
+					}
 
-    const selected = selection.inputs;
-    const total = selection.total;
+					outputsAmount += parseInt(utxo[k].value);
 
-    let keyPairs = [];
-    let scripts = [];
+					scripts.push({
+						'script': script,
+						'type': type,
+						'value': parseInt(utxo[k].value),
+					});
 
-    // 🔥 STEP 3: Add inputs
-    for (let i = 0; i < selected.length; i++) {
+				}
+			} catch (e) {
+				console.log(e);
+			}
+		}
+	}
 
-        let utxo = selected[i];
+	if (outputsAmount < fee) {
+		return {error: "Output amount error"};
+	}
 
-        let script = new Buffer(utxo.script, 'hex');
-        let type = getScriptType(script);
+	try {
+		if (outputsAmount-amount-fee > 0) {
+			if (mainAddress != null) {
+				txb.addOutput(mainAddress, parseInt(outputsAmount-amount-fee));
+			} else {
+				return {error: "Main address error"};
+			}
+		}
 
-        let keyPair = keyMap[utxo.address];
+		txb.addOutput(recieveAddress, parseInt(amount));
 
-        keyPairs.push(keyPair);
+	} catch (e) {
+		return {error: e.message}
+	}
 
-        if (type === 'bech32') {
-            let p2wpkh = getP2WPKHScript(keyPair.publicKey);
-            txb.addInput(utxo.txid, utxo.index, null, p2wpkh.output);
-        } else {
-            txb.addInput(utxo.txid, utxo.index);
-        }
+	for (var i = 0; i < scripts.length; i++) {
+		var value = scripts[i].value;
 
-        scripts.push({
-            script,
-            type,
-            value: parseInt(utxo.value),
-        });
-    }
+		switch (scripts[i].type) {
+			case 'bech32':
+				txb.sign(i, keyPairs[i], null, null, value, null);
+				break
 
-    // 🔥 STEP 4: Outputs
-    try {
+			case 'segwit':
+				var redeem = getP2WPKHScript(keyPairs[i].publicKey);
+				var p2sh = getP2SHScript(redeem);
 
-        const change = total - target - selection.fee;
+				txb.sign(i, keyPairs[i], p2sh.redeem.output, null, value, null);
+				break
 
-        if (change > 0) {
-            if (!mainAddress) return { error: "Main address error" };
+			case 'legacy':
+				txb.sign(i, keyPairs[i])
+				break
 
-            // ⚠️ For now uses mainAddress (we can upgrade to change chain later)
-            txb.addOutput(mainAddress, change);
-        }
+			default:
+				console.log("error in default: ", scripts[i].type);
+				break
+		}
+	}
 
-        txb.addOutput(recieveAddress, target);
+	try {
+		var tx = txb.build().toHex()
+		console.log("Transaction: ", tx)
+		let broadcast = await socketConnect.broadcast_transaction(tx)
 
-    } catch (e) {
-        return { error: e.message };
-    }
+		console.log("Transaction error: ", broadcast);
+		return {tx: broadcast};
+	} catch (e) {
+		console.log("Error: ", e.message);
+		return {error: e.message}
+	}
 
-    // 🔥 STEP 5: Sign inputs
-    for (let i = 0; i < scripts.length; i++) {
-
-        let value = scripts[i].value;
-
-        switch (scripts[i].type) {
-
-            case 'bech32':
-                txb.sign(i, keyPairs[i], null, null, value, null);
-                break;
-
-            case 'segwit':
-                let redeem = getP2WPKHScript(keyPairs[i].publicKey);
-                let p2sh = getP2SHScript(redeem);
-
-                txb.sign(i, keyPairs[i], p2sh.redeem.output, null, value, null);
-                break;
-
-            case 'legacy':
-                txb.sign(i, keyPairs[i]);
-                break;
-
-            default:
-                console.log("Unknown script type:", scripts[i].type);
-                break;
-        }
-    }
-
-    // 🔥 STEP 6: Build + broadcast
-    try {
-        let tx = txb.build().toHex();
-        console.log("Transaction:", tx);
-
-        let broadcast = await socketConnect.broadcast_transaction(tx);
-
-        return { tx: broadcast };
-
-    } catch (e) {
-        console.log("Error:", e.message);
-        return { error: e.message };
-    }
 }
 
-export async function subscribeToAddresses(socketConnect, walletAddresses, callback, intervalMs = 5000) {
+export async function subscribeToAddresses(socketConnect, walletAddresses, callback) {
+	socketConnect.socket.on('address.update', (res) => {
+		createTransactionsFromHistory(socketConnect, walletAddresses, res.result.tx).then((newMempoolObjects) => {
+			console.log("newMempoolObjects", newMempoolObjects)
+			callback(newMempoolObjects, false);
+		})
+	});
 
-    let lastTxs = {};
-
-    const poll = async () => {
-        try {
-            let allHistory = [];
-
-            for (let address in walletAddresses) {
-                const history = await socketConnect.get_history(address);
-                allHistory.push(...history.tx);
-            }
-
-            const txObjects = await createTransactionsFromHistory(socketConnect, walletAddresses, allHistory);
-
-            const newTxs = Object.keys(txObjects).filter(k => !(k in lastTxs));
-
-            if (newTxs.length > 0) {
-                lastTxs = { ...lastTxs, ...txObjects };
-                callback(txObjects, true);
-            }
-
-        } catch (e) {
-            console.log("Polling error:", e.message);
-        }
-    };
-
-    poll();
-    return setInterval(poll, intervalMs);
+	for (var address in walletAddresses) {
+		await socketConnect.subscribe_address(address);
+	}
 }
 
 export async function createTransactionObject(socketConnect, walletAddresses, transactionVerbose) {
@@ -640,17 +555,15 @@ export async function estimateFee () {
 }
 
 export async function getBalance(transactions) {
+   	let balance = {"confirmed": 0, "unconfirmed": 0};
+   	let currentHeight = (await socketConnect.get_info()).blocks;
 
-    await ensureSocketConnected(socketConnect);
-
-    let balance = { confirmed: 0, unconfirmed: 0 };
-
-    for (let time in transactions) {
-        if (transactions[time].type) {
-            balance.confirmed -= transactions[time].amount;
-        } else {
-            balance.confirmed += transactions[time].amount;
-        }
+    for (time in transactions) {
+		if (transactions[time].type) {
+			balance.confirmed -= transactions[time].amount;
+		} else {
+			balance.confirmed += transactions[time].amount;
+		}
     }
 
     balance.confirmed -= balance.unconfirmed;
@@ -658,96 +571,30 @@ export async function getBalance(transactions) {
 }
 
 export async function checkMempool(socketConnect, walletAddresses, address, callback) {
+	try {
+		var mempool = (await socketConnect.get_mempool(address)).tx;
+		console.log("mempool array",mempool);
+		var mempoolObjects = await createTransactionsFromHistory(socketConnect, walletAddresses, mempool);
 
-    try {
-        let lastMempool = [];
+		callback(mempoolObjects, false);
 
-        const poll = async () => {
-            try {
-                const res = await socketConnect.get_mempool(address);
-                const mempool = res.tx || [];
+		var interval = setInterval(function() {
+			socketConnect.get_mempool(address).then((newMempool) => {
+				if (JSON.stringify(mempool) != JSON.stringify(newMempool.tx)) {
+					createTransactionsFromHistory(socketConnect, walletAddresses, newMempool.tx).then((newMempoolObjects) => {
+						callback(newMempoolObjects, true);
+						mempool = newMempool.tx;
+					})
+				}
 
-                if (JSON.stringify(mempool) !== JSON.stringify(lastMempool)) {
+				if (newMempool.tx.length == 0) {
+					clearInterval(interval);
+				}
+			});
+		}, 2000);
+	} catch (e) {
+		console.log('mempool error: ', e)
+		return;
+	}
 
-                    const mempoolObjects = await createTransactionsFromHistory(
-                        socketConnect,
-                        walletAddresses,
-                        mempool
-                    );
-
-                    callback(mempoolObjects, true);
-                    lastMempool = mempool;
-                }
-
-            } catch (e) {
-                console.log("Mempool fetch error:", e.message);
-            }
-        };
-
-        poll();
-        return setInterval(poll, 3000);
-
-    } catch (e) {
-        console.log('mempool error: ', e);
-    }
-}
-
-export const deriveGapLimitAddresses = async (
-    seed,
-    derivationPath,
-    startIndex = 0,
-    gapLimit = 20
-) => {
-
-    let addresses = {};
-
-    const endIndex = startIndex + gapLimit;
-
-    const generated = await generateAddresses(
-        seed,
-        derivationPath,
-        startIndex,
-        endIndex
-    );
-
-    Object.keys(generated).forEach(addr => {
-        addresses[addr] = generated[addr];
-    });
-
-    return addresses;
-
-};
-
-export const selectUTXOs = (utxos, targetAmount, feePerByte = 1) => {
-
-    // Sort smallest → largest (better for minimizing change)
-    const sorted = utxos.sort((a, b) => a.value - b.value);
-
-    let selected = [];
-    let total = 0;
-
-    for (let utxo of sorted) {
-        selected.push(utxo);
-        total += utxo.value;
-
-        // rough fee estimate (can improve later)
-        const estimatedFee = (selected.length * 148 + 2 * 34 + 10) * feePerByte;
-
-        if (total >= targetAmount + estimatedFee) {
-            return {
-                inputs: selected,
-                total,
-                fee: estimatedFee
-            };
-        }
-    }
-
-    throw new Error("Insufficient funds");
-};
-
-export async function ensureSocketConnected(socketConnect) {
-    if (!socketConnect) {
-        throw new Error("API client not initialized");
-    }
-    return true;
 }

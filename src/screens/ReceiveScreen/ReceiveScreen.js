@@ -75,97 +75,17 @@ class ReceiveScreen extends PureComponent {
         Navigation.events().bindComponent(this);
     }
 
-    componentDidMount() {
-        this.generateFirstAddress();
-    }
-
     newAddress = async () => {
-
         const { setWalletValues, updateWalletValues, timestamp } = this.props;
+        const { addresses, receiveAddress, seedPhrase } = this.props.wallet[timestamp];
+        console.log(addresses[receiveAddress].index)
+        const newAddress = await generateAddresses(seedPhrase.join(" "), Config.DERIVATION_PATH + "0", addresses[receiveAddress].index+1, addresses[receiveAddress].index+1);
+        console.log(newAddress)
+        setWalletValues({receiveAddress: Object.keys(newAddress)[0], timestamp: timestamp});
 
-        const { addresses, receiveAddress, seedPhrase, addressType } = this.props.wallet[timestamp];
-
-        const currentIndex = addresses[receiveAddress].index + 1;
-
-        let derivationPath;
-
-        // Select correct derivation path based on wallet type
-        if (addressType === "legacy") {
-            derivationPath = Config.DERIVATION_PATH_LEGACY + "0";
+        if (!(Object.keys(newAddress)[0] in addresses)) {
+            updateWalletValues({addresses: newAddress, timestamp: timestamp});
         }
-        else if (addressType === "segwit") {
-            derivationPath = Config.DERIVATION_PATH_SEGWIT + "0";
-        }
-        else {
-            derivationPath = Config.DERIVATION_PATH + "0"; // default bech32
-        }
-
-        const newAddress = await generateAddresses(
-            seedPhrase.join(" "),
-            derivationPath,
-            currentIndex,
-            currentIndex
-        );
-
-        const addr = Object.keys(newAddress)[0];
-
-        setWalletValues({
-            receiveAddress: addr,
-            timestamp: timestamp
-        });
-
-        if (!(addr in addresses)) {
-            updateWalletValues({
-                addresses: newAddress,
-                timestamp: timestamp
-            });
-        }
-
-    }
-
-    generateFirstAddress = async () => {
-
-        const { setWalletValues, updateWalletValues, timestamp } = this.props;
-
-        const wallet = this.props.wallet[timestamp];
-
-        if (!wallet) return;
-
-        const { addresses, seedPhrase, addressType } = wallet;
-
-        if (wallet.receiveAddress) return; // already exists
-
-        let derivationPath;
-
-        if (addressType === "legacy") {
-            derivationPath = Config.DERIVATION_PATH_LEGACY + "0";
-        }
-        else if (addressType === "segwit") {
-            derivationPath = Config.DERIVATION_PATH_SEGWIT + "0";
-        }
-        else {
-            derivationPath = Config.DERIVATION_PATH + "0";
-        }
-
-        const newAddress = await generateAddresses(
-            seedPhrase.join(" "),
-            derivationPath,
-            0,
-            0
-        );
-
-        const addr = Object.keys(newAddress)[0];
-
-        setWalletValues({
-            receiveAddress: addr,
-            timestamp: timestamp
-        });
-
-        updateWalletValues({
-            addresses: newAddress,
-            timestamp: timestamp
-        });
-
     }
 
     copyAddress = async () => {
