@@ -17,7 +17,7 @@ import AppLink from 'react-native-app-link';
 import { Navigation } from 'react-native-navigation';
 import { responsiveHeight, responsiveWidth, responsiveFontSize } from 'react-native-responsive-dimensions';
 import { connectWallet } from 'src/redux';
-import { sendTransation, numberWithCommas } from 'src/utils/WalletUtils';
+import { sendTransaction, numberWithCommas } from 'src/utils/WalletUtils';
 import { pushPasswordGate } from 'src/navigation';
 import Config from 'react-native-config';
 import moment from "moment";
@@ -136,7 +136,7 @@ class ConfirmationScreen extends PureComponent {
     try {
       await global.socketConnect.connect();
 
-      tx = await sendTransation(global.socketConnect, addresses, receiveAddress, address, amount, fee, timelock);
+      tx = await sendTransaction(global.socketConnect, addresses, receiveAddress, address, amount, fee, timelock);
       console.log(tx);
     } catch (e) {
       tx = null;

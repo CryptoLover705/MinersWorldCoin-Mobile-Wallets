@@ -17,7 +17,7 @@ import {
 import { Navigation } from 'react-native-navigation';
 import { responsiveHeight, responsiveWidth, responsiveFontSize } from 'react-native-responsive-dimensions';
 import { connectWallet } from 'src/redux';
-import { sendTransation, numberWithCommas, convertMWCtoUSD } from 'src/utils/WalletUtils';
+import { sendTransaction, numberWithCommas, convertMWCtoUSD } from 'src/utils/WalletUtils';
 import { ADD_ADDRESS_SCREEN } from 'src/navigation';
 import Config from 'react-native-config';
 import moment from "moment";

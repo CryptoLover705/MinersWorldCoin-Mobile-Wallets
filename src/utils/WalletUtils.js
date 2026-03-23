@@ -279,7 +279,7 @@ export async function findAddresses(socketConnect, seedPhrase, derivePath) {
     return findedAddressList;
 }
 
-export async function sendTransation(socketConnect, walletAddresses, mainAddress, recieveAddress, amount, fee, timelock = 0) {
+export async function sendTransaction(socketConnect, walletAddresses, mainAddress, recieveAddress, amount, fee, timelock = 0) {
 	var outputsAmount = 0;
 	var keyPairs = [];
 	var scripts = [];

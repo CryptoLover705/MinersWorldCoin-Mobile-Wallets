@@ -21,7 +21,7 @@ import RNPickerSelect, { defaultStyles } from 'react-native-picker-select';
 // import DatePicker from 'react-native-datepicker';
 import DatePickerInput from 'src/components/DatePicker';
 import { connectWallet } from 'src/redux';
-import { sendTransation, isAddress } from 'src/utils/WalletUtils';
+import { sendTransaction, isAddress } from 'src/utils/WalletUtils';
 import moment from "moment";
 import { SCAN_SCREEN, CONFIRMATION_SCREEN, ADDRESS_LIST_SCREEN, pushPasswordGate } from 'src/navigation';
 
