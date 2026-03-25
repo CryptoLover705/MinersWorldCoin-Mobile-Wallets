@@ -14,14 +14,18 @@ import SocketUtil from 'src/utils/SocketMethodsUtils';
 import Config from 'react-native-config';
 import LocalizedStrings from 'react-native-localization';
 import * as languages from 'src/languages';
-import { Platform, YellowBox } from 'react-native';
+import { Platform, LogBox } from 'react-native';
 
 if (Platform.OS === 'android') {
   require('intl');
   require('intl/locale-data/jsonp/en-IN');
 }
 
-YellowBox.ignoreWarnings(['Setting a timer']);
+LogBox.ignoreLogs([
+  'Setting a timer',
+  'Require cycle:',
+  'AsyncStorage has been extracted from react-native core'
+]);
 
 global.strings = new LocalizedStrings(languages);
 
