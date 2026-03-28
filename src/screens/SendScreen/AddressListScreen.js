@@ -135,19 +135,25 @@ class AddressListScreen extends PureComponent {
         return (
             <View style={styles.flex}>
                 <ScrollView>
-                {
-                    list.map((item, i) => (
+                    {addressBook.map((item, i) => (
                         <ListItem
-                            onPress={item.onPress}
                             key={i}
-                            title={item.title}
-                            subtitle={item.subtitle}
-                            bottomDivider={true}
-                            titleStyle={{fontSize: 14, color: 'black'}}
-                            subtitleStyle={{fontSize: 12, color: 'gray'}}
-                        />
-                    ))
-                }
+                            onPress={() => this.chooseAddress(item.address)}
+                            bottomDivider
+                        >
+                            <ListItem.Content>
+                                <ListItem.Title style={{ fontSize: 14, color: 'black' }}>
+                                    {item.address}
+                                </ListItem.Title>
+
+                                <ListItem.Subtitle style={{ fontSize: 12, color: 'gray' }}>
+                                    {item.name}
+                                </ListItem.Subtitle>
+                            </ListItem.Content>
+
+                            <ListItem.Chevron />
+                        </ListItem>
+                    ))}
                 </ScrollView>
             </View>
         );

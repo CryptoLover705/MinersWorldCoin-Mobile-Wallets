@@ -13,6 +13,7 @@ import {
 import {
     Text,
     Button,
+    Icon,
     ListItem,
     Divider
 } from 'react-native-elements';
@@ -360,78 +361,112 @@ class SettingsScreen extends PureComponent {
         return (
             <View style={styles.flex}>
                 <ScrollView>
-                {
-                    firstSection.map((item, i) => (
-                        <ListItem
-                            onPress={item.onPress}
-                            key={i}
-                            title={item.title}
-                            subtitle={item.subtitle}
-                            bottomDivider={true}
-                            topDivider={item.topDivider}
-                            titleStyle={{color: 'black'}}
-                            subtitleStyle={{fontSize: 12, color: 'gray'}}
-                            leftIcon={{ name: item.icon, type: 'font-awesome', color: 'gray', size: 20 }}
-                        />
-                    ))
-                }
-                <View style={{marginTop: 20}} />
-                {
-                    secondSection.map((item, i) => (
-                        <ListItem
-                            onPress={item.onPress}
-                            key={i}
-                            title={item.title}
-                            subtitle={item.subtitle}
-                            bottomDivider={true}
-                            topDivider={item.topDivider}
-                            titleStyle={{color: 'black'}}
-                            subtitleStyle={{fontSize: 12, color: 'gray'}}
-                            rightIcon={{ name: 'chevron-right', type: 'font-awesome', size: 20 }}
-                            leftIcon={{ name: item.icon, type: 'font-awesome', color: 'gray', size: 20 }}
-                        />
-                    ))
-                }
 
-                <View style={{marginTop: 20}} />
+                    {
+                        firstSection.map((item, i) => (
+                            <ListItem
+                                key={i}
+                                onPress={item.onPress}
+                                bottomDivider
+                                topDivider={item.topDivider}
+                            >
+                                <ListItem.Content>
+                                    <ListItem.Title style={{ color: 'black' }}>
+                                        {item.title}
+                                    </ListItem.Title>
 
-                {
-                    addressSection.map((item, i) => (
-                        <ListItem
-                            onPress={item.onPress}
-                            key={i}
-                            title={item.title}
-                            subtitle={item.subtitle}
-                            bottomDivider={true}
-                            topDivider={item.topDivider}
-                            titleStyle={{color: 'black'}}
-                            subtitleStyle={{fontSize: 12, color: 'gray'}}
-                            leftIcon={{ name: item.icon, type: 'font-awesome', color: 'gray', size: 20 }}
-                        />
-                    ))
-                }
-                <View style={{marginTop: 20}} />
-                {
-                    thirdSection.map((item, i) => (
-                        <ListItem
-                            onPress={item.onPress}
-                            key={i}
-                            title={item.title}
-                            subtitle={item.subtitle}
-                            bottomDivider={true}
-                            topDivider={item.topDivider}
-                            titleStyle={{color: 'black'}}
-                            subtitleStyle={{fontSize: 12, color: 'gray'}}
-                            leftIcon={{ name: item.icon, type: 'font-awesome', color: 'gray', size: 20 }}
-                        />
-                    ))
-                }
+                                    <ListItem.Subtitle style={{ fontSize: 12, color: 'gray' }}>
+                                        {item.subtitle}
+                                    </ListItem.Subtitle>
+                                </ListItem.Content>
 
-                <View style={{flexDirection: 'row', justifyContent: "center", alignItems: "center", marginTop: 14, backgroundColor: '#202225'}}>
-                    <Text style={{fontSize: 14, padding: 10, color: 'white'}}>
-                        Version: 1.0.1, Build: 8
-                    </Text>
-                </View>
+                                <Icon name={item.icon} type="font-awesome" color="gray" size={20} />
+                            </ListItem>
+                        ))
+                    }
+
+                    <View style={{ marginTop: 20 }} />
+
+                    {
+                        secondSection.map((item, i) => (
+                            <ListItem
+                                key={i}
+                                onPress={item.onPress}
+                                bottomDivider
+                                topDivider={item.topDivider}
+                            >
+                                <Icon name={item.icon} type="font-awesome" color="gray" size={20} />
+
+                                <ListItem.Content>
+                                    <ListItem.Title style={{ color: 'black' }}>
+                                        {item.title}
+                                    </ListItem.Title>
+
+                                    <ListItem.Subtitle style={{ fontSize: 12, color: 'gray' }}>
+                                        {item.subtitle}
+                                    </ListItem.Subtitle>
+                                </ListItem.Content>
+
+                                <ListItem.Chevron />
+                            </ListItem>
+                        ))
+                    }
+
+                    <View style={{ marginTop: 20 }} />
+
+                    {
+                        addressSection.map((item, i) => (
+                            <ListItem
+                                key={i}
+                                onPress={item.onPress}
+                                bottomDivider
+                                topDivider={item.topDivider}
+                            >
+                                <Icon name={item.icon} type="font-awesome" color="gray" size={20} />
+
+                                <ListItem.Content>
+                                    <ListItem.Title style={{ color: 'black' }}>
+                                        {item.title}
+                                    </ListItem.Title>
+
+                                    <ListItem.Subtitle style={{ fontSize: 12, color: 'gray' }}>
+                                        {item.subtitle}
+                                    </ListItem.Subtitle>
+                                </ListItem.Content>
+                            </ListItem>
+                        ))
+                    }
+
+                    <View style={{ marginTop: 20 }} />
+
+                    {
+                        thirdSection.map((item, i) => (
+                            <ListItem
+                                key={i}
+                                onPress={item.onPress}
+                                bottomDivider
+                                topDivider={item.topDivider}
+                            >
+                                <Icon name={item.icon} type="font-awesome" color="gray" size={20} />
+
+                                <ListItem.Content>
+                                    <ListItem.Title style={{ color: 'black' }}>
+                                        {item.title}
+                                    </ListItem.Title>
+
+                                    <ListItem.Subtitle style={{ fontSize: 12, color: 'gray' }}>
+                                        {item.subtitle}
+                                    </ListItem.Subtitle>
+                                </ListItem.Content>
+                            </ListItem>
+                        ))
+                    }
+
+                    <View style={{ flexDirection: 'row', justifyContent: "center", alignItems: "center", marginTop: 14, backgroundColor: '#202225' }}>
+                        <Text style={{ fontSize: 14, padding: 10, color: 'white' }}>
+                            Version: 1.0.1, Build: 8
+                        </Text>
+                    </View>
 
                 </ScrollView>
             </View>

@@ -143,26 +143,42 @@ class LanguageListScreen extends PureComponent {
         var list = [];
 
         for (let i = 0; i < languages.length; i++) {
-            list.push({language: getLanguageInfo(languages[i]), isChecked: languageCode == languages[i] ? true : false, onPress: () => this.chooseLanguage(languages[i])});
+            list.push({
+                language: getLanguageInfo(languages[i]),
+                isChecked: languageCode == languages[i] ? true : false,
+                onPress: () => this.chooseLanguage(languages[i])
+            });
         }
 
         return (
             <View style={styles.flex}>
                 <ScrollView>
-                {
-                    list.map((item, i) => (
-                        <ListItem
-                            onPress={item.onPress}
-                            key={i}
-                            title={item.language.name}
-                            titleStyle={{color: 'black'}}
-                            subtitle={item.language.nativeName}
-                            subtitleStyle={{fontSize: 12, color: 'gray'}}
-                            bottomDivider={true}
-                            rightIcon={item.isChecked ? { name: 'check', type: 'font-owesome', size: 20 } : {}}
-                        />
-                    ))
-                }
+                    {
+                        list.map((item, i) => (
+                            <ListItem
+                                key={i}
+                                onPress={item.onPress}
+                                bottomDivider
+                            >
+                                <ListItem.Content>
+                                    <ListItem.Title style={{ color: 'black' }}>
+                                        {item.language.name}
+                                    </ListItem.Title>
+
+                                    <ListItem.Subtitle style={{ fontSize: 12, color: 'gray' }}>
+                                        {item.language.nativeName}
+                                    </ListItem.Subtitle>
+                                </ListItem.Content>
+
+                                {item.isChecked && (
+                                    <ListItem.CheckBox
+                                        checked
+                                        onPress={item.onPress}
+                                    />
+                                )}
+                            </ListItem>
+                        ))
+                    }
                 </ScrollView>
             </View>
         );
