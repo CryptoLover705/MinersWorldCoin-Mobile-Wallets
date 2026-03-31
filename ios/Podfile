@@ -39,9 +39,9 @@ target 'MinersWorldCoin' do
   pod 'Yoga', :path => '../node_modules/react-native/ReactCommon/yoga', :modular_headers => true
 
   # 🔥 FIX: use :path NOT :podspec (fixes URI::BadURIError)
-  pod 'Folly', :path => '../node_modules/react-native/third-party-podspecs'
-  pod 'glog', :path => '../node_modules/react-native/third-party-podspecs'
-  pod 'DoubleConversion', :path => '../node_modules/react-native/third-party-podspecs'
+  pod 'DoubleConversion', :path => '../node_modules/react-native/third-party-podspecs/DoubleConversion.podspec'
+  pod 'glog', :path => '../node_modules/react-native/third-party-podspecs/glog.podspec'
+  pod 'Folly', :path => '../node_modules/react-native/third-party-podspecs/Folly.podspec'
 
   pod 'RNVectorIcons', :path => '../node_modules/react-native-vector-icons'
 
