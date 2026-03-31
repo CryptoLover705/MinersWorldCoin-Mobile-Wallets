@@ -32,6 +32,7 @@ jobs:
 
       - name: Build Android Release APK
         run: |
+          chmod +x android/gradlew
           cd android
           ./gradlew assembleRelease
 
@@ -59,10 +60,16 @@ jobs:
       - name: Install dependencies
         run: |
           yarn install --ignore-engines
+          yarn jetifier
+
+      - name: Generate React Native codegen
+        run: |
+          yarn react-native codegen
 
       - name: Install CocoaPods
         run: |
           cd ios
+          rm -rf Pods Podfile.lock
           pod install
 
       - name: Build iOS (unsigned)
