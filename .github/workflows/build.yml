@@ -82,21 +82,19 @@ jobs:
           SPEC_DIR="node_modules/react-native/Libraries/FBReactNativeSpec"
           mkdir -p $SPEC_DIR
 
-          cat > $SPEC_DIR/FBReactNativeSpec.podspec <<'EOF'
-            Pod::Spec.new do |s|
-              s.name         = "FBReactNativeSpec"
-              s.version      = "0.0.1"
-              s.summary      = "Dummy spec for CI"
-              s.description  = "Temporary fix for RN 0.68 CI builds"
-              s.homepage     = "https://reactnative.dev"
-              s.license      = { :type => "MIT" }
-              s.author       = "CI"
-              s.platforms    = { :ios => "11.0" }
-              s.source       = { :git => "", :tag => "0.0.1" }
-              s.source_files = "dummy.m"
-            end
-            EOF
-          
+          echo 'Pod::Spec.new do |s|' > $SPEC_DIR/FBReactNativeSpec.podspec
+          echo '  s.name         = "FBReactNativeSpec"' >> $SPEC_DIR/FBReactNativeSpec.podspec
+          echo '  s.version      = "0.0.1"' >> $SPEC_DIR/FBReactNativeSpec.podspec
+          echo '  s.summary      = "Dummy spec for CI"' >> $SPEC_DIR/FBReactNativeSpec.podspec
+          echo '  s.description  = "Temporary fix for RN 0.68 CI builds"' >> $SPEC_DIR/FBReactNativeSpec.podspec
+          echo '  s.homepage     = "https://reactnative.dev"' >> $SPEC_DIR/FBReactNativeSpec.podspec
+          echo '  s.license      = { :type => "MIT" }' >> $SPEC_DIR/FBReactNativeSpec.podspec
+          echo '  s.author       = "CI"' >> $SPEC_DIR/FBReactNativeSpec.podspec
+          echo '  s.platforms    = { :ios => "11.0" }' >> $SPEC_DIR/FBReactNativeSpec.podspec
+          echo '  s.source       = { :git => "", :tag => "0.0.1" }' >> $SPEC_DIR/FBReactNativeSpec.podspec
+          echo '  s.source_files = "dummy.m"' >> $SPEC_DIR/FBReactNativeSpec.podspec
+          echo 'end' >> $SPEC_DIR/FBReactNativeSpec.podspec
+
           echo "// dummy file" > $SPEC_DIR/dummy.m
 
       - name: Install CocoaPods
