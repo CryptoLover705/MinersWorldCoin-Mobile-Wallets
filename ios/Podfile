@@ -18,6 +18,8 @@ target 'MinersWorldCoin' do
   pod 'React-RCTText', :path => '../node_modules/react-native/Libraries/Text'
   pod 'React-RCTNetwork', :path => '../node_modules/react-native/Libraries/Network'
 
+  pod 'RCT-Folly', :path => '../node_modules/react-native/third-party-podspecs/RCT-Folly.podspec'
+
   # Vector icons
   pod 'RNVectorIcons', :path => '../node_modules/react-native-vector-icons'
 
