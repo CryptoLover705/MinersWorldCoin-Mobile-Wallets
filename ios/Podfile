@@ -1,4 +1,4 @@
-platform :ios, '11.0'
+platform :ios, '12.0'
 
 require_relative '../node_modules/@react-native-community/cli-platform-ios/native_modules'
 
@@ -49,7 +49,7 @@ post_install do |installer|
     target.build_configurations.each do |config|
       
       # 🔥 FORCE MIN IOS VERSION
-      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '11.0'
+      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '12.0'
 
       # 🔥 FIX modern Xcode + RN 0.68 issues
       config.build_settings['EXCLUDED_ARCHS[sdk=iphonesimulator*]'] = 'arm64'
