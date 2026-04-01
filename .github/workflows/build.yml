@@ -89,6 +89,10 @@ jobs:
           pod cache clean --all
           pod repo update
 
+      - name: Force clean boost
+        run: |
+          rm -rf ~/Library/Caches/CocoaPods/Pods/Release/boost*
+
       - name: Install CocoaPods
         run: |
           cd ios
