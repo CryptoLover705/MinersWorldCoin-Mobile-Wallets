@@ -18,13 +18,14 @@ target 'MinersWorldCoin' do
   pod 'React-RCTText', :path => '../node_modules/react-native/Libraries/Text'
   pod 'React-RCTNetwork', :path => '../node_modules/react-native/Libraries/Network'
 
+  pod 'RCTRequired', :path => '../node_modules/react-native/Libraries/RCTRequired'
   pod 'RCTTypeSafety', :path => '../node_modules/react-native/Libraries/TypeSafety'
   pod 'RCT-Folly', :path => '../node_modules/react-native/third-party-podspecs/RCT-Folly.podspec'
   pod 'FBLazyVector', :path => '../node_modules/react-native/Libraries/FBLazyVector'
 
   pod 'ReactCommon', :path => '../node_modules/react-native/ReactCommon'
   pod 'ReactCommon/turbomodule/core', :path => '../node_modules/react-native/ReactCommon'
-  
+
   pod 'React-logger', :path => '../node_modules/react-native/ReactCommon/logger'
   pod 'React-jsi', :path => '../node_modules/react-native/ReactCommon/jsi'
   pod 'React-callinvoker', :path => '../node_modules/react-native/ReactCommon/callinvoker'
