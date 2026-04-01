@@ -23,6 +23,7 @@ target 'MinersWorldCoin' do
 
   pod 'ReactCommon', :path => '../node_modules/react-native/ReactCommon'
   pod 'ReactCommon/turbomodule/core', :path => '../node_modules/react-native/ReactCommon'
+  pod 'React-logger', :path => '../node_modules/react-native/ReactCommon/logger'
 
   # Vector icons
   pod 'RNVectorIcons', :path => '../node_modules/react-native-vector-icons'
