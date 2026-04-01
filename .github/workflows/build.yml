@@ -82,16 +82,20 @@ jobs:
           sudo gem install cocoapods -v 1.16.2
           pod repo update
 
-      - name: Fix CocoaPods cache (boost checksum issue)
+      - name: Patch boost podspec (fix checksum mismatch)
         run: |
-          rm -rf ~/Library/Caches/CocoaPods
-          rm -rf ~/.cocoapods/repos
-          pod cache clean --all
-          pod repo update
+          BOOST_SPEC="node_modules/react-native/third-party-podspecs/boost.podspec"
 
-      - name: Force clean boost
-        run: |
-          rm -rf ~/Library/Caches/CocoaPods/Pods/Release/boost*
+          if [ -f "$BOOST_SPEC" ]; then
+            echo "Patching boost podspec..."
+
+            sed -i '' 's|https://boostorg.jfrog.io.*|https://archives.boost.io/release/1.76.0/source/boost_1_76_0.tar.bz2|g' "$BOOST_SPEC"
+
+            sed -i '' 's/:sha256 => .*$/ :sha256 => "1c162b579a423fa6876c6c5bc16d39ab4bc05e28898977a0a6af345f523f6357"/g' "$BOOST_SPEC"
+          else
+            echo "Boost podspec not found!"
+            exit 1
+          fi
 
       - name: Install CocoaPods
         run: |
