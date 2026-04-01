@@ -82,6 +82,13 @@ jobs:
           sudo gem install cocoapods -v 1.16.2
           pod repo update
 
+      - name: Fix CocoaPods cache (boost checksum issue)
+        run: |
+          rm -rf ~/Library/Caches/CocoaPods
+          rm -rf ~/.cocoapods/repos
+          pod cache clean --all
+          pod repo update
+
       - name: Install CocoaPods
         run: |
           cd ios
