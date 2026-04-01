@@ -32,6 +32,7 @@ target 'MinersWorldCoin' do
   pod 'React-perflogger', :path => '../node_modules/react-native/ReactCommon/reactperflogger'
   pod 'React-cxxreact', :path => '../node_modules/react-native/ReactCommon/cxxreact'
   pod 'React-jsinspector', :path => '../node_modules/react-native/ReactCommon/jsinspector'
+  pod 'React-runtimeexecutor', :path => '../node_modules/react-native/ReactCommon/runtimeexecutor'
 
   # Vector icons
   pod 'RNVectorIcons', :path => '../node_modules/react-native-vector-icons'
