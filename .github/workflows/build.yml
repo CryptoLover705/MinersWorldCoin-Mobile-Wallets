@@ -52,15 +52,17 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: app-release-apk
-          path: |
-            android/app/build/outputs/apk/release/*.apk
+          path: android/app/build/outputs/apk/release/*.apk
 
   build-ios:
-    runs-on: macos-latest
+    runs-on: macos-13
 
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
+
+      - name: Select Xcode 14.3
+        run: sudo xcode-select -s /Applications/Xcode_14.3.app
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -68,33 +70,61 @@ jobs:
           node-version: 16.20.2
           cache: 'yarn'
 
-      - name: Fix React Native iOS build env
-        run: |
-          export RCT_NEW_ARCH_ENABLED=0
-
       - name: Install dependencies
         run: |
           yarn install --ignore-engines
           yarn jetifier
 
-      - name: Fix CocoaPods (Ruby 3.3 compatibility)
+      - name: Install CocoaPods (pinned)
         run: |
-          sudo gem install cocoapods -v 1.16.2
+          sudo gem install cocoapods -v 1.15.2
           pod repo update
 
-      - name: Vendor Boost locally (fix checksum issue permanently)
-        run: |
-          mkdir -p ios/vendor/boost
-          cd ios/vendor/boost
+      - name: Fix React Native env
+        run: echo "RCT_NEW_ARCH_ENABLED=0" >> $GITHUB_ENV
 
-          curl -L https://archives.boost.io/release/1.76.0/source/boost_1_76_0.tar.bz2 -o boost.tar.bz2
-          tar -xjf boost.tar.bz2
-
-      - name: Install CocoaPods
+      - name: Install Pods (with Boost fallback)
         run: |
           cd ios
           rm -rf Pods Podfile.lock
-          pod install --clean-install
+
+          set +e
+
+          echo "➡️ Attempting normal pod install..."
+          pod install --repo-update
+          STATUS=$?
+
+          if [ $STATUS -ne 0 ]; then
+            echo "⚠️ Pod install failed, applying Boost fallback..."
+
+            mkdir -p vendor/boost
+            cd vendor/boost
+
+            curl -L https://archives.boost.io/release/1.76.0/source/boost_1_76_0.tar.bz2 -o boost.tar.bz2
+            tar -xjf boost.tar.bz2
+
+            cd ../../
+
+            echo "➡️ Patching Podfile..."
+
+            # Remove any existing boost lines
+            sed -i '' '/pod.*boost/d' Podfile
+
+            # SAFE insertion (no YAML break)
+            sed -i '' "/use_react_native!/a\\
+            pod 'boost', :path => './vendor/boost/boost_1_76_0'
+            " Podfile
+
+            echo "➡️ Re-running pod install..."
+            pod install --repo-update
+
+            if [ $? -ne 0 ]; then
+              echo "❌ Pod install failed even after Boost fix"
+              exit 1
+            fi
+          else
+            echo "✅ Pod install succeeded normally"
+          fi
 
       - name: Build iOS (unsigned)
         run: |
@@ -109,7 +139,7 @@ jobs:
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO
 
-      - name: Package IPA (unsigned)
+      - name: Package IPA
         run: |
           cd ios
           mkdir Payload
