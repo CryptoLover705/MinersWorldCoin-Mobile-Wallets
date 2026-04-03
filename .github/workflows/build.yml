@@ -136,6 +136,12 @@ jobs:
           rm -rf Pods Podfile.lock
           pod install --repo-update
 
+      - name: Patch iOS build issues
+        run: |
+          cd ios
+          chmod +x fix-ios-build.sh
+          ./fix-ios-build.sh
+
       - name: Build iOS (unsigned)
         run: |
           cd ios

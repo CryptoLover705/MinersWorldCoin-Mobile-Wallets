@@ -24,33 +24,36 @@ target 'MinersWorldCoin' do
 end
 
 post_install do |installer|
-  react_native_post_install(installer)
-
   installer.pods_project.targets.each do |target|
     target.build_configurations.each do |config|
-       # REQUIRED for Xcode 15
+
+      # ✅ iOS 12 minimum (required)
       config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '12.0'
 
-      # FIX Yoga compile error
+      # ✅ Modern C++
       config.build_settings['CLANG_CXX_LANGUAGE_STANDARD'] = 'c++17'
       config.build_settings['CLANG_CXX_LIBRARY'] = 'libc++'
 
-      # Prevent weird RN 0.68 issues
-      config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] ||= ['$(inherited)']
-      config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] << '_LIBCPP_ENABLE_CXX17_REMOVED_UNARY_BINARY_FUNCTION'
+      # ✅ Stop Xcode 15 killing build on warnings
+      config.build_settings['GCC_TREAT_WARNINGS_AS_ERRORS'] = 'NO'
 
+      # ✅ Fix Folly + Boost compatibility
+      config.build_settings['OTHER_CPLUSPLUSFLAGS'] ||= [
+        '$(inherited)',
+        '-DFOLLY_NO_CONFIG=1',
+        '-DFOLLY_MOBILE=1',
+        '-DFOLLY_USE_LIBCPP=1'
+      ]
+
+      # ✅ Force Boost compatibility macros
       config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] ||= [
         '$(inherited)',
         'BOOST_NO_CXX98_FUNCTION_BASE',
         'BOOST_NO_CXX98_BINDERS',
-        'BOOST_NO_CXX98_STD_BIND'
+        'BOOST_NO_CXX98_STD_BIND',
+        'BOOST_NO_AUTO_PTR'
       ]
 
-      config.build_settings['GCC_TREAT_WARNINGS_AS_ERRORS'] = 'NO'
-      config.build_settings['CLANG_WARN_BOOL_CONVERSION'] = 'NO'
-      config.build_settings['CLANG_WARN_CONSTANT_CONVERSION'] = 'NO'
-      
-      config.build_settings['OTHER_CPLUSPLUSFLAGS'] ||= ['$(inherited)', '-DFOLLY_NO_CONFIG', '-DFOLLY_MOBILE=1']
     end
   end
 end
