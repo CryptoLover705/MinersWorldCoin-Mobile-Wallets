@@ -83,7 +83,6 @@ jobs:
       - name: Fix React Native env
         run: echo "RCT_NEW_ARCH_ENABLED=0" >> $GITHUB_ENV
 
-      # 🔥 ONLY THIS STEP — overwrite boost podspec
       - name: Override Boost podspec (FINAL FIX)
         run: |
           cat > node_modules/react-native/third-party-podspecs/boost.podspec << 'EOF'
@@ -95,7 +94,9 @@ jobs:
             s.license  = { :type => 'Boost Software License' }
             s.author   = { 'Boost' => 'boost@lists.boost.org' }
 
-            s.source   = { :path => '../ios/vendor/boost/boost_1_76_0' }
+            s.source = {
+              :http => 'file://' + File.expand_path('../../../../ios/vendor/boost/boost_1_76_0.tar.bz2', __dir__)
+            }
 
             s.header_dir = 'boost'
             s.source_files = 'boost/**/*.hpp'
