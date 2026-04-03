@@ -85,6 +85,7 @@ jobs:
 
       - name: Download Boost locally
         run: |
+          mkdir -p ios/vendor/boost
           cd ios/vendor/boost
 
           curl -L https://archives.boost.io/release/1.76.0/source/boost_1_76_0.tar.bz2 -o boost_1_76_0.tar.bz2
