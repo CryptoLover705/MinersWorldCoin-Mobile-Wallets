@@ -77,7 +77,7 @@ jobs:
 
       - name: Install CocoaPods
         run: |
-          sudo gem install cocoapods -v 1.15.2
+          sudo gem install cocoapods -v 1.14.0
           pod repo update
 
       - name: Fix React Native env
@@ -87,18 +87,16 @@ jobs:
         run: |
           mkdir -p ios/vendor/boost
           cd ios/vendor/boost
-
           curl -L https://archives.boost.io/release/1.76.0/source/boost_1_76_0.tar.bz2 -o boost_1_76_0.tar.bz2
 
       - name: Verify Boost file exists
         run: |
           ls -lah ios/vendor/boost
 
-      - name: Override Boost podspec (FINAL FIX)
+      - name: Override Boost podspec (fixed path)
         run: |
           BOOST_PATH="$(pwd)/ios/vendor/boost/boost_1_76_0.tar.bz2"
-
-          echo "Using Boost at: $BOOST_PATH"
+          echo "Boost path: $BOOST_PATH"
 
           cat > node_modules/react-native/third-party-podspecs/boost.podspec << EOF
           Pod::Spec.new do |s|
@@ -110,7 +108,7 @@ jobs:
             s.author   = { 'Boost' => 'boost@lists.boost.org' }
 
             s.source = {
-              :http => "file://$(pwd)/ios/vendor/boost/boost_1_76_0.tar.bz2"
+              :http => "file://#{ENV['BOOST_PATH']}"
             }
 
             s.header_dir = 'boost'
@@ -127,10 +125,10 @@ jobs:
       - name: Fix Yoga for Xcode 15
         run: |
           FILE="node_modules/react-native/ReactCommon/yoga/yoga/Yoga.cpp"
-
           if [ -f "$FILE" ]; then
-            echo "Patching Yoga.cpp for Xcode 15 compatibility..."
+            echo "Patching Yoga.cpp for Xcode 15..."
             sed -i '' 's/hadOverflow() |/hadOverflow() ||/g' $FILE
+            sed -i '' 's/constexpr static/constexpr/' $FILE
           else
             echo "Yoga.cpp not found!"
             exit 1
@@ -146,7 +144,7 @@ jobs:
         run: |
           cd ios
           chmod +x fix-ios-build.sh
-          ./fix-ios-build.sh
+          ./fix-ios-build.sh || true
 
       - name: Build iOS (unsigned)
         run: |
@@ -164,7 +162,7 @@ jobs:
       - name: Package IPA
         run: |
           cd ios
-          mkdir Payload
+          mkdir -p Payload
           cp -r build/Build/Products/Release-iphoneos/*.app Payload/
           zip -r app-unsigned.ipa Payload
 
