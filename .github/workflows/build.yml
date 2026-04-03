@@ -75,6 +75,10 @@ jobs:
           yarn install --ignore-engines
           yarn jetifier
 
+      - name: Remove RN Boost podspec (hard fix)
+        run: |
+          rm -f node_modules/react-native/third-party-podspecs/boost.podspec
+
       - name: Install CocoaPods
         run: |
           sudo gem install cocoapods -v 1.15.2
@@ -83,8 +87,11 @@ jobs:
       - name: Fix React Native env
         run: echo "RCT_NEW_ARCH_ENABLED=0" >> $GITHUB_ENV
 
-      - name: Install Pods
+      - name: Prepare iOS dependencies
         run: |
+          # 🔥 Remove RN boost (prevents duplicate source)
+          rm -f node_modules/react-native/third-party-podspecs/boost.podspec
+
           cd ios
           rm -rf Pods Podfile.lock
           pod install --repo-update
