@@ -106,9 +106,12 @@ jobs:
         run: |
           ls -lah ios/vendor/boost
 
-      - name: Override Boost podspec
+      - name: Override Boost podspec (fixed path)
         run: |
-          cat > node_modules/react-native/third-party-podspecs/boost.podspec << 'EOF'
+          BOOST_PATH="$(pwd)/ios/vendor/boost/boost_patched.tar.bz2"
+          echo "Boost path: $BOOST_PATH"
+
+          cat > node_modules/react-native/third-party-podspecs/boost.podspec << EOF
           Pod::Spec.new do |s|
             s.name     = 'boost'
             s.version  = '1.76.0'
@@ -118,7 +121,7 @@ jobs:
             s.author   = { 'Boost' => 'boost@lists.boost.org' }
 
             s.source = {
-              :http => "file://#{Dir.pwd}/ios/vendor/boost/boost_patched.tar.bz2"
+              :http => "file://$BOOST_PATH"
             }
 
             s.header_dir = 'boost'
