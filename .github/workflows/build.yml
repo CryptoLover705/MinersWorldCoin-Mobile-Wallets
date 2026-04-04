@@ -91,22 +91,19 @@ jobs:
           curl -L https://archives.boost.io/release/1.76.0/source/boost_1_76_0.tar.bz2 -o boost.tar.bz2
           tar -xjf boost.tar.bz2
 
-          echo "Patching Boost globally..."
+          echo "Patching Boost..."
 
-          # 1. Replace BOOST_CONSTEXPR safely across Boost
-          find boost_1_76_0 -type f \( -name "*.hpp" -o -name "*.h" \) | while read file; do
-            sed -i '' 's/BOOST_CONSTEXPR constexpr/constexpr/g' "$file" || true
-          done
+          FILE="boost_1_76_0/boost/type_traits/integral_constant.hpp"
 
-          # 2. Ensure BOOST_CONSTEXPR always resolves (fallback define)
-          CONFIG_FILE="boost_1_76_0/boost/config.hpp"
-          if [ -f "$CONFIG_FILE" ]; then
-            echo "Injecting BOOST_CONSTEXPR fallback into config.hpp..."
-            sed -i '' '1i\
-          #ifndef BOOST_CONSTEXPR\
-          #define BOOST_CONSTEXPR constexpr\
-          #endif
-          ' "$CONFIG_FILE"
+          # HARD replace (more reliable than sed)
+          perl -pi -e 's/BOOST_CONSTEXPR/constexpr/g' $FILE
+
+          # VERIFY PATCH
+          if grep -q BOOST_CONSTEXPR $FILE; then
+            echo "Patch FAILED"
+            exit 1
+          else
+            echo "Patch SUCCESS"
           fi
 
           echo "Repacking Boost..."
@@ -136,11 +133,13 @@ jobs:
             }
 
             s.header_dir = 'boost'
-            s.source_files = 'boost/**/*.hpp'
+            s.source_files = 'boost_1_76_0/boost/**/*.hpp'
+            s.preserve_paths = 'boost_1_76_0'
 
             s.pod_target_xcconfig = {
               'CLANG_CXX_LANGUAGE_STANDARD' => 'c++17',
-              'CLANG_CXX_LIBRARY' => 'libc++'
+              'CLANG_CXX_LIBRARY' => 'libc++',
+              'HEADER_SEARCH_PATHS' => '"$(PODS_ROOT)/boost/boost_1_76_0"'
             }
           end
           EOF
