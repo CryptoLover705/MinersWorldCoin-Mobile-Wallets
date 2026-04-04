@@ -43,6 +43,7 @@ post_install do |installer|
       config.build_settings['GCC_TREAT_WARNINGS_AS_ERRORS'] = 'NO'
       config.build_settings['GCC_WARN_INHIBIT_ALL_WARNINGS'] = 'YES'
 
+      # ✅ SAFE C++ FLAGS
       cpp_flags = config.build_settings['OTHER_CPLUSPLUSFLAGS'] || '$(inherited)'
       cpp_flags = [cpp_flags] unless cpp_flags.is_a?(Array)
 
@@ -56,6 +57,7 @@ post_install do |installer|
 
       config.build_settings['OTHER_CPLUSPLUSFLAGS'] = cpp_flags
 
+      # ✅ SAFE PREPROCESSOR DEFINITIONS
       defs = config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] || '$(inherited)'
       defs = [defs] unless defs.is_a?(Array)
 
@@ -67,50 +69,6 @@ post_install do |installer|
       ]
 
       config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] = defs
-      config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] = defs
-
-      cflags = config.build_settings['OTHER_CFLAGS'] || '$(inherited)'
-      cflags = [cflags] unless cflags.is_a?(Array)
-
-      cflags += [
-        '-fno-constexpr-steps'
-      ]
-
-      config.build_settings['OTHER_CFLAGS'] = cflags
-
-      config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] = defs
-
-      cflags = config.build_settings['OTHER_CFLAGS'] || '$(inherited)'
-      cflags = [cflags] unless cflags.is_a?(Array)
-
-      cflags += [
-        '-fno-constexpr-steps'
-      ]
-
-      config.build_settings['OTHER_CFLAGS'] = cflags
-
-      config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] = defs
-
-      cflags = config.build_settings['OTHER_CFLAGS'] || '$(inherited)'
-      cflags = [cflags] unless cflags.is_a?(Array)
-
-      cflags += [
-        '-fno-constexpr-steps'
-      ]
-
-      config.build_settings['OTHER_CFLAGS'] = cflags
-
-      config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] = defs
-
-      cflags = config.build_settings['OTHER_CFLAGS'] || '$(inherited)'
-      cflags = [cflags] unless cflags.is_a?(Array)
-
-      cflags += [
-        '-fno-constexpr-steps'
-      ]
-
-      config.build_settings['OTHER_CFLAGS'] = cflags
-
     end
   end
 end
