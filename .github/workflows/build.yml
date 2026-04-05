@@ -87,20 +87,27 @@ jobs:
 
       - name: Download, Patch & Repack Boost
         run: |
+          set -e
+
           mkdir -p ios/vendor/boost
           cd ios/vendor/boost
 
+          echo "📦 Downloading Boost..."
           curl -L https://archives.boost.io/release/1.76.0/source/boost_1_76_0.tar.bz2 -o boost.tar.bz2
+
           tar -xjf boost.tar.bz2
 
-          echo "Patching Boost..."
+          echo "🔧 Patching Boost..."
 
+          # Fix constexpr (integral_constant)
           FILE="boost_1_76_0/boost/type_traits/integral_constant.hpp"
-
-          # Fix constexpr
           sed -i '' 's/BOOST_CONSTEXPR/constexpr/g' $FILE
 
-          echo "Repacking Boost (FLATTENED)..."
+          # Ensure BOOST_CONSTEXPR exists globally (clang.hpp)
+          FILE="boost_1_76_0/boost/config/compiler/clang.hpp"
+          sed -i '' '1s;^;#ifndef BOOST_CONSTEXPR\n#define BOOST_CONSTEXPR constexpr\n#endif\n;' $FILE
+
+          echo "📦 Repacking Boost (FLATTENED)..."
 
           cd boost_1_76_0
           tar -cjf ../boost_patched.tar.bz2 boost
@@ -108,6 +115,29 @@ jobs:
       - name: Verify Boost file exists
         run: |
           ls -lah ios/vendor/boost
+
+      - name: Patch Folly (Post Install)
+        run: |
+          set -e
+
+          cd ios
+
+          echo "🔧 Patching Folly..."
+
+          FILE="Pods/Headers/Public/RCT-Folly/folly/dynamic.h"
+
+          # Add missing include
+          sed -i '' '1s;^;#include <boost/operators.hpp>\n;' $FILE
+
+          # Remove boost::operators dependency (fallback)
+          sed -i '' 's/private boost::operators<dynamic>//g' $FILE
+
+          echo "✅ Folly patch complete"
+
+      - name: Verify Folly file exists
+        run: |
+          ls -lah Pods/Headers/Public/RCT-Folly/
+          ls -lah Pods/Headers/Public/RCT-Folly/folly/
 
       - name: Override Boost podspec (fixed path)
         run: |
@@ -156,12 +186,6 @@ jobs:
           cd ios
           rm -rf Pods Podfile.lock
           pod install --repo-update
-
-      - name: Patch iOS build issues
-        run: |
-          cd ios
-          chmod +x fix-ios-build.sh
-          ./fix-ios-build.sh || true
 
       - name: Build iOS (unsigned)
         run: |
