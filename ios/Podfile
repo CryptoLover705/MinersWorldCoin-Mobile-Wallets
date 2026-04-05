@@ -9,7 +9,8 @@ target 'MinersWorldCoin' do
   use_react_native!(
     :path => config[:reactNativePath],
     :hermes_enabled => false,
-    :fabric_enabled => false
+    :fabric_enabled => false,
+    :turbo_modules_enabled => false
   )
 
   permissions_path = '../node_modules/react-native-permissions/ios'
@@ -69,6 +70,11 @@ post_install do |installer|
       ]
 
       config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] = defs
+
+      # 🔥 Disable TurboModules compilation (KEY FIX)
+      if target.name == 'ReactCommon'
+        config.build_settings['EXCLUDED_SOURCE_FILE_NAMES'] = 'TurboCxxModule.cpp RCTTurboModule*'
+      end
 
     end
   end

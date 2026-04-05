@@ -81,7 +81,9 @@ jobs:
           pod repo update
 
       - name: Fix React Native env
-        run: echo "RCT_NEW_ARCH_ENABLED=0" >> $GITHUB_ENV
+        run: |
+          echo "RCT_NEW_ARCH_ENABLED=0" >> $GITHUB_ENV
+          echo "RCT_ENABLE_TURBO_MODULES=0" >> $GITHUB_ENV
 
       - name: Download, Patch & Repack Boost
         run: |
