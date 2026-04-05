@@ -45,7 +45,19 @@ post_install do |installer|
       config.build_settings['GCC_TREAT_WARNINGS_AS_ERRORS'] = 'NO'
       config.build_settings['GCC_WARN_INHIBIT_ALL_WARNINGS'] = 'YES'
 
-      # C++ Flags (SAFE)
+      # ✅ FORCE Boost headers to be found (CRITICAL FIX)
+      header_paths = config.build_settings['HEADER_SEARCH_PATHS'] || '$(inherited)'
+      header_paths = [header_paths] unless header_paths.is_a?(Array)
+
+      header_paths += [
+        '$(SRCROOT)/Pods/boost',
+        '$(SRCROOT)/Pods/Headers/Public/boost',
+        '$(SRCROOT)/Pods/Headers/Public'
+      ]
+
+      config.build_settings['HEADER_SEARCH_PATHS'] = header_paths
+
+      # C++ Flags
       cpp_flags = config.build_settings['OTHER_CPLUSPLUSFLAGS'] || '$(inherited)'
       cpp_flags = [cpp_flags] unless cpp_flags.is_a?(Array)
 
@@ -58,7 +70,7 @@ post_install do |installer|
 
       config.build_settings['OTHER_CPLUSPLUSFLAGS'] = cpp_flags
 
-      # Preprocessor defs (SAFE)
+      # Preprocessor defs
       defs = config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] || '$(inherited)'
       defs = [defs] unless defs.is_a?(Array)
 
@@ -71,7 +83,7 @@ post_install do |installer|
 
       config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] = defs
 
-      # 🔥 Disable TurboModules compilation (KEY FIX)
+      # 🔥 Disable TurboModules compilation
       if target.name == 'ReactCommon'
         config.build_settings['EXCLUDED_SOURCE_FILE_NAMES'] = 'TurboCxxModule.cpp RCTTurboModule*'
       end
