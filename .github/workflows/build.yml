@@ -99,45 +99,22 @@ jobs:
 
           echo "🔧 Patching Boost..."
 
-          # Fix constexpr (integral_constant)
+          # Fix constexpr
           FILE="boost_1_76_0/boost/type_traits/integral_constant.hpp"
           sed -i '' 's/BOOST_CONSTEXPR/constexpr/g' $FILE
 
-          # Ensure BOOST_CONSTEXPR exists globally (clang.hpp)
+          # Ensure BOOST_CONSTEXPR globally
           FILE="boost_1_76_0/boost/config/compiler/clang.hpp"
           sed -i '' '1s;^;#ifndef BOOST_CONSTEXPR\n#define BOOST_CONSTEXPR constexpr\n#endif\n;' $FILE
 
-          echo "📦 Repacking Boost (FLATTENED)..."
+          echo "📦 Repacking Boost (FULL STRUCTURE)..."
 
-          cd boost_1_76_0
-          tar -cjf ../boost_patched.tar.bz2 boost
+          # 🔥 KEEP FULL STRUCTURE (boost + libs + everything)
+          tar -cjf boost_patched.tar.bz2 boost_1_76_0
 
       - name: Verify Boost file exists
         run: |
           ls -lah ios/vendor/boost
-
-      - name: Patch Folly (Post Install)
-        run: |
-          set -e
-
-          cd ios
-
-          echo "🔧 Patching Folly..."
-
-          FILE="Pods/Headers/Public/RCT-Folly/folly/dynamic.h"
-
-          # Add missing include
-          sed -i '' '1s;^;#include <boost/operators.hpp>\n;' $FILE
-
-          # Remove boost::operators dependency (fallback)
-          sed -i '' 's/private boost::operators<dynamic>//g' $FILE
-
-          echo "✅ Folly patch complete"
-
-      - name: Verify Folly file exists
-        run: |
-          ls -lah Pods/Headers/Public/RCT-Folly/
-          ls -lah Pods/Headers/Public/RCT-Folly/folly/
 
       - name: Override Boost podspec (fixed path)
         run: |
@@ -163,8 +140,7 @@ jobs:
 
             s.pod_target_xcconfig = {
               'CLANG_CXX_LANGUAGE_STANDARD' => 'c++17',
-              'CLANG_CXX_LIBRARY' => 'libc++',
-              'HEADER_SEARCH_PATHS' => '"$(PODS_ROOT)/boost/boost_1_76_0"'
+              'CLANG_CXX_LIBRARY' => 'libc++'
             }
           end
           EOF
@@ -186,6 +162,29 @@ jobs:
           cd ios
           rm -rf Pods Podfile.lock
           pod install --repo-update
+
+      - name: Patch Folly (Post Install)
+        run: |
+          set -e
+
+          cd ios
+
+          echo "🔧 Patching Folly..."
+
+          FILE="Pods/Headers/Public/RCT-Folly/folly/dynamic.h"
+
+          # Add missing include
+          sed -i '' '1s;^;#include <boost/operators.hpp>\n;' $FILE
+
+          # Remove boost::operators dependency (fallback)
+          sed -i '' 's/private boost::operators<dynamic>//g' $FILE
+
+          echo "✅ Folly patch complete"
+
+      - name: Verify Folly file exists
+        run: |
+          ls -lah Pods/Headers/Public/RCT-Folly/
+          ls -lah Pods/Headers/Public/RCT-Folly/folly/
 
       - name: Build iOS (unsigned)
         run: |
