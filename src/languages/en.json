@@ -56,7 +56,7 @@
 	"importWallet.title": "Import wallet",
 	"importWallet.seedSubtitle": "Enter your seed phrase",
 	"importWallet.seedInput": "Start typing recovery phrase",
-	"importWallet.tooltipText": "12 words separated by single spaces.",
+	"importWallet.tooltipText": "12 or 24 words separated by single spaces.",
 	"importWallet.nextButton": "Next",
 	"importWallet.invalidSeedAlert": "Invalid seed phrase. Try again!",
 	"importWallet.walletTitle": "Title",

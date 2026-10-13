@@ -384,6 +384,65 @@ export async function findAddresses(socketConnect, seedPhrase, derivePath) {
     return findedAddressList;
 }
 
+// True if the address has ever been used (any tx history). Throws on network failure
+// so a flaky connection can't silently look like "no funds".
+async function addressIsUsed(address) {
+    let lastError;
+
+    for (let attempt = 0; attempt < 2; attempt++) {
+        try {
+            const res = await axios.get(`${API}/history/${address}`);
+            const tx = res?.data?.result?.tx;
+            return Array.isArray(tx) && tx.length > 0;
+        } catch (e) {
+            lastError = e;
+        }
+    }
+
+    throw lastError;
+}
+
+// Scans one derivation chain/type in batches of 20 until a whole batch is unused.
+export async function findAddressesREST(seedPhrase, derivePath, type = ADDRESS_TYPES.BECH32) {
+    const MAX_BATCHES = 15; // hard stop at 300 addresses per chain/type
+    let found = {};
+    let k = 0;
+
+    for (let batch = 0; batch < MAX_BATCHES; batch++) {
+        const candidates = generateAddresses(seedPhrase, derivePath, k, k + 19, type);
+        const addrs = Object.keys(candidates);
+
+        const used = await Promise.all(addrs.map(addressIsUsed));
+
+        let anyUsed = false;
+        addrs.forEach((addr, i) => {
+            if (used[i]) {
+                found[addr] = candidates[addr];
+                anyUsed = true;
+            }
+        });
+
+        if (!anyUsed) break;
+        k += 20;
+    }
+
+    return found;
+}
+
+// Finds every used address for a seed: external + change chains, all address types.
+export async function discoverSeedAddresses(seedPhrase, basePath) {
+    let all = {};
+
+    for (const chain of ["0", "1"]) {
+        for (const type of [ADDRESS_TYPES.BECH32, ADDRESS_TYPES.SEGWIT, ADDRESS_TYPES.LEGACY]) {
+            const found = await findAddressesREST(seedPhrase, basePath + chain, type);
+            all = { ...all, ...found };
+        }
+    }
+
+    return all;
+}
+
 export async function sendTransaction(
     socketConnect,
     walletAddresses,

@@ -95,7 +95,8 @@ class ImportWalletScreen extends PureComponent {
                         component: {
                             name: 'starter.GenerateWalletScreen',
                             passProps: {
-                                timestamp: timestamp
+                                timestamp: timestamp,
+                                genarateType: 1
                             },
                             options: {
                                 topBar: {
@@ -149,7 +150,7 @@ class ImportWalletScreen extends PureComponent {
             return;
         }
 
-        if (!isWif && processedSeedPhrase.length < 12) {
+        if (!isWif && ![12, 24].includes(processedSeedPhrase.length)) {
             Alert.alert(
                 global.strings['importWallet.title'],
                 global.strings['importWallet.invalidSeedAlert'],
