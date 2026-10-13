@@ -55,10 +55,10 @@ export default function wallet(state = DEFAULT, action = {}) {
 }
 
 function addNewWallet(state, initialWallet, payload) {
-    let newState = {...state};
-    newState[payload.timestamp] = initialWallet;
+    // deep copy so wallets never share nested objects (addresses, transactions...)
+    const freshWallet = JSON.parse(JSON.stringify(initialWallet));
 
-    return newState;
+    return { ...state, [payload.timestamp]: freshWallet };
 }
 
 function setWalletValues(state, payload) {

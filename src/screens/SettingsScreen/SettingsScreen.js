@@ -280,18 +280,12 @@ class SettingsScreen extends PureComponent {
     }
 
     openWIFImport = () => {
-        const { wallet } = this.props;
+        const { wallet, timestamp } = this.props;
 
-        const walletKeys = Object.keys(wallet).filter(
-            k => typeof wallet[k] === 'object' && wallet[k].addresses
-        );
-
-        if (walletKeys.length === 0) {
+        if (!wallet[timestamp] || !wallet[timestamp].addresses) {
             Alert.alert("Error", "No wallet found");
             return;
         }
-
-        const timestamp = walletKeys[0]; // or active wallet if you track it
 
         Navigation.showModal({
             stack: {

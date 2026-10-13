@@ -220,7 +220,7 @@ export function isAddress(address) {
 
 export function isValidWIF(wif) {
     try {
-        ECPair.fromWIF(wif, mwc);
+        bitcoin.ECPair.fromWIF(wif, mwc);
         return true;
     } catch (e) {
         return false;
@@ -262,6 +262,20 @@ export function importAddressByWIF(wif) {
         console.log("WIF import error:", e);
         return null;
     }
+}
+
+// Builds an address list (same shape as generateAddresses) from a single WIF key.
+// bech32 is first so it becomes the default receive address, like seed wallets.
+export function generateAddressesFromWIF(wif) {
+    const derived = importAddressByWIF(wif);
+    if (!derived) return {};
+
+    const list = {};
+    if (derived.bech32) list[derived.bech32] = { index: 0, privateKey: wif, type: ADDRESS_TYPES.BECH32 };
+    if (derived.segwit) list[derived.segwit] = { index: 0, privateKey: wif, type: ADDRESS_TYPES.SEGWIT };
+    if (derived.legacy) list[derived.legacy] = { index: 0, privateKey: wif, type: ADDRESS_TYPES.LEGACY };
+
+    return list;
 }
 
 export function deriveAddressFromWIF(wif, type = ADDRESS_TYPES.LEGACY) {

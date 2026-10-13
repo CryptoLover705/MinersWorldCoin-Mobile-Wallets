@@ -23,6 +23,7 @@ import {
 
 import { Navigation } from 'react-native-navigation';
 import { connectWallet, connectPassword } from 'src/redux';
+import { isValidWIF } from 'src/utils/WalletUtils';
 
 const styles = StyleSheet.create({
     flex: {
@@ -117,14 +118,36 @@ class ImportWalletScreen extends PureComponent {
     // -----------------------------
     // WARNING / CONFIRMATION
     // -----------------------------
+    titleIsUnique = (title) => {
+        const { wallet } = this.props;
+
+        return !Object.keys(wallet).some(ts =>
+            wallet[ts] &&
+            typeof wallet[ts] === 'object' &&
+            wallet[ts].isCreated &&
+            wallet[ts].title === title
+        );
+    };
+
     warningPopUp = () => {
 
         const { seedPhrase, wifKey, title } = this.state;
 
         const processedSeedPhrase = seedPhrase.filter(str => str !== "");
-        const isWif = wifKey && wifKey.trim().length > 0;
+        const cleanWif = (wifKey || "").trim();
+        const isWif = cleanWif.length > 0;
 
         // VALIDATION
+
+        if (isWif && processedSeedPhrase.length > 0) {
+            Alert.alert(
+                global.strings['importWallet.title'],
+                "Enter either a seed phrase OR a private key (WIF), not both.",
+                [{ text: "OK" }],
+                { cancelable: false }
+            );
+            return;
+        }
 
         if (!isWif && processedSeedPhrase.length < 12) {
             Alert.alert(
@@ -136,7 +159,7 @@ class ImportWalletScreen extends PureComponent {
             return;
         }
 
-        if (isWif && wifKey.trim().length < 20) {
+        if (isWif && !isValidWIF(cleanWif)) {
             Alert.alert(
                 "Invalid Private Key",
                 "Please enter a valid WIF/private key.",
@@ -156,27 +179,30 @@ class ImportWalletScreen extends PureComponent {
             return;
         }
 
-        // WARNING
+        if (!this.titleIsUnique(title)) {
+            Alert.alert(
+                global.strings['importWallet.title'],
+                global.strings['importWallet.notUniqueTitle'],
+                [{ text: "OK" }],
+                { cancelable: false }
+            );
+            return;
+        }
+
+        // CONFIRMATION (importing never touches your existing wallets)
 
         Alert.alert(
-            "⚠️ IMPORT WALLET WARNING",
+            isWif ? "Import Private Key" : global.strings['importWallet.title'],
 
             isWif
-                ? "You are importing a PRIVATE KEY (WIF).\n\n" +
-                  "This will REPLACE your current wallet.\n\n" +
-                  "• Your current address will no longer be used\n" +
-                  "• A new address will be derived from this key\n" +
-                  "• All balances & transactions will switch\n\n" +
-                  "Make sure your current wallet is backed up before continuing."
+                ? "This private key will be added as a NEW, separate wallet.\n\n" +
+                  "Your existing wallets are not changed."
                 : global.strings['importWallet.walletImportAlert'],
 
             [
                 {
                     text: "Cancel",
-                    style: "cancel",
-                    onPress: () => {
-                        Navigation.pop(this.props.componentId);
-                    }
+                    style: "cancel"
                 },
                 {
                     text: isWif
@@ -200,23 +226,29 @@ class ImportWalletScreen extends PureComponent {
     // -----------------------------
     openPasswordScreen = (title, processedSeedPhrase) => {
 
-        const { setWalletValues, addNewWallet } = this.props;
+        const { setWalletValues, addNewWallet, wallet } = this.props;
         const { wifKey } = this.state;
 
-        const timestamp = parseInt(new Date() / 1000);
+        // Wallets are keyed by timestamp. Make sure the key is brand new so we
+        // can never land on (and reset) an existing wallet.
+        let timestamp = parseInt(Date.now() / 1000);
+        while (wallet && timestamp in wallet) {
+            timestamp += 1;
+        }
 
         this.setState({ timestamp });
 
         addNewWallet({ timestamp });
 
-        // WIF IMPORT
         if (wifKey && wifKey.trim().length > 0) {
 
+            // WIF IMPORT (one key -> legacy + segwit + bech32 addresses)
             setWalletValues({
                 wifKey: wifKey.trim(),
                 title,
                 timestamp,
-                type: "wif"
+                type: "wif",
+                isImported: true
             });
 
         } else {
@@ -230,7 +262,6 @@ class ImportWalletScreen extends PureComponent {
             });
         }
 
-        // IMPORTANT
         pushPasswordGate(0, timestamp);
     };
 
@@ -286,8 +317,42 @@ class ImportWalletScreen extends PureComponent {
 
                             onChangeText={(text) =>
                                 this.setState({
-                                    seedPhrase: text.split(" ")
+                                    seedPhrase: text.trim().toLowerCase().split(/\s+/)
                                 })
+                            }
+                        />
+
+                        <Divider
+                            style={{
+                                height: 1,
+                                backgroundColor: '#f0eff5',
+                                marginVertical: 10
+                            }}
+                        />
+
+                        {/* OR: PRIVATE KEY (WIF) */}
+
+                        <Text
+                            style={{
+                                fontSize: 14,
+                                fontWeight: 'bold',
+                                color: 'black'
+                            }}
+                        >
+                            Or import a private key (WIF)
+                        </Text>
+
+                        <Input
+                            placeholder="Private key (WIF)"
+
+                            autoCorrect={false}
+
+                            autoCapitalize="none"
+
+                            secureTextEntry
+
+                            onChangeText={(wifKey) =>
+                                this.setState({ wifKey })
                             }
                         />
 
