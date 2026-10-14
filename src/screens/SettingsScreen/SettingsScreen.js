@@ -491,7 +491,7 @@ class SettingsScreen extends PureComponent {
 
                     <View style={{ flexDirection: 'row', justifyContent: "center", alignItems: "center", marginTop: 14, backgroundColor: '#202225' }}>
                         <Text style={{ fontSize: 14, padding: 10, color: 'white' }}>
-                            Version: 1.0.3
+                            Version: 1.0.4
                         </Text>
                     </View>
 
