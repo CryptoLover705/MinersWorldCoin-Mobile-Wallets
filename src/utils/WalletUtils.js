@@ -294,24 +294,22 @@ export function getLanguageInfo(code) {
 	}
 }
 
+// Generates a standard BIP39 mnemonic (12 or 24 words) using a cryptographically
+// secure RNG (react-native-get-random-values is loaded first in index.js).
+// Includes the BIP39 checksum, so the phrase works in any BIP39 wallet.
 export function generateSeedPhrase(size = 12) {
-	const mnemonic = require('assets/mnemonics.json');
-	let seedPhrase = [];
-	let randomNumbers = [];
+    if (size !== 12 && size !== 24) {
+        throw new Error("Seed phrase size must be 12 or 24 words");
+    }
 
-	for (var i = 0; i < size; i++) {
-	  while (true) {
-	    let num = Math.floor(Math.random()*mnemonic.words.length);
+    const mnemonic = bip39.generateMnemonic(size === 24 ? 256 : 128);
 
-	    if (!randomNumbers.includes(num)) {
-	      randomNumbers.push(num);
-	      seedPhrase.push(mnemonic.words[num]);
-	      break;
-	    }
-	  }
-	}
+    // Never hand out a seed we can't validate (e.g. if the RNG were broken)
+    if (!bip39.validateMnemonic(mnemonic)) {
+        throw new Error("Failed to generate a valid seed phrase");
+    }
 
-	return seedPhrase;
+    return mnemonic.split(" ");
 }
 
 export function generateAddresses(
