@@ -122,10 +122,23 @@ class ConfirmationScreen extends PureComponent {
     this.cancel();
   }
 
+  // Sending funds needs the PIN (or biometrics) first
+  requirePin = () => {
+    const { timestamp } = this.props;
+
+    if (this.state.isLoading || this.sending) return;
+
+    pushPasswordGate(3, timestamp, () => this.confirm());
+  }
+
   confirm = async () => {
     var { setWalletValues, amount, address, fee, from, timelock, timestamp } = this.props;
     const { addresses, receiveAddress } = this.props.wallet[timestamp];
     let tx;
+
+    // ignore double taps while a send is already in progress
+    if (this.sending) return;
+    this.sending = true;
 
     this.setState({isLoading: true});
 
@@ -139,13 +152,18 @@ class ConfirmationScreen extends PureComponent {
       tx = await sendTransaction(global.socketConnect, addresses, receiveAddress, address, amount, fee, timelock);
       console.log(tx);
     } catch (e) {
-      tx = null;
-      this.setState({isLoading: false});
+      console.log(e);
+      tx = { error: (e && e.message) ? e.message : "Could not send the transaction" };
     }
 
+    this.sending = false;
     this.setState({isLoading: false});
 
-    if(tx !== undefined && !("error" in tx)) {
+    if (!tx || typeof tx !== 'object') {
+      tx = { error: "No response from the network" };
+    }
+
+    if(!("error" in tx)) {
       Alert.alert(
           global.strings['send.title'],
           global.strings['send.successAlert'],
@@ -238,7 +256,7 @@ class ConfirmationScreen extends PureComponent {
               containerStyle={{width: "90%", justifyContent: 'center'}}
               buttonStyle={styles.buttonIn}
               titleStyle={styles.buttonTitleIn}
-              onPress={() => this.confirm()}
+              onPress={() => this.requirePin()}
               loading={this.state.isLoading}
             />
             <Button

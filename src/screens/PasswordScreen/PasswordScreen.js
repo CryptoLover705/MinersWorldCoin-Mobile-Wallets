@@ -162,7 +162,7 @@ class PasswordScreen extends PureComponent {
 
         try {
             if (
-                type === 1 &&
+                (type === 1 || type === 3) &&
                 password &&
                 password[timestamp] &&
                 password[timestamp].useBiometric
@@ -201,7 +201,7 @@ class PasswordScreen extends PureComponent {
             : password.length >= 4;
 
         if(validLength) {
-            if (type == 1) {
+            if (type == 1 || type == 3) {
                 this.checkPassword(password, type);
             } else if (type == 2) {
                 this.processCallback(password);
@@ -307,6 +307,8 @@ class PasswordScreen extends PureComponent {
             if (type == 1) {
                 this.resetFailedAttempts();
                 pushWalletStack(timestamp);
+            } else if (type == 3) {
+                this.verified();
             }
         })
         .catch(() => {
@@ -321,6 +323,15 @@ class PasswordScreen extends PureComponent {
         if (entry && (entry.failedAttempts || entry.lockedUntil)) {
             setPasswordValues({ timestamp, failedAttempts: 0, lockedUntil: 0 });
         }
+    }
+
+    // type 3: PIN confirmed -> close this modal, then run whatever needed the PIN
+    verified = () => {
+        const { callback } = this.props;
+        const done = () => { if (callback) callback(); };
+
+        this.resetFailedAttempts();
+        Navigation.dismissModal(this.props.componentId).then(done, done);
     }
 
     showAlert = (message, onOk) => {
@@ -360,6 +371,8 @@ class PasswordScreen extends PureComponent {
 
             if (type == 1) {
                 pushWalletStack(timestamp);
+            } else if (type == 3) {
+                this.verified();
             }
 
             return;
@@ -404,8 +417,8 @@ class PasswordScreen extends PureComponent {
         // Number pad for numeric PINs. Existing alphanumeric PINs and old-wallet
         // passwords (type 2) keep the full keyboard so nobody gets locked out.
         const storedPin = (this.props.password && this.props.password[timestamp] && this.props.password[timestamp].value) || '';
-        const numericPin = (type == 0) || (type == 1 && /^\d+$/.test(storedPin));
-        const canUseBiometric = type == 1 && bioAvailable && this.props.password &&
+        const numericPin = (type == 0) || ((type == 1 || type == 3) && /^\d+$/.test(storedPin));
+        const canUseBiometric = (type == 1 || type == 3) && bioAvailable && this.props.password &&
             this.props.password[timestamp] && this.props.password[timestamp].useBiometric;
 
         return (
@@ -417,7 +430,7 @@ class PasswordScreen extends PureComponent {
                     />
                     <View style={{flexDirection: 'column', alignItems: 'center', marginTop: 20}}>
                         <Text style={{fontWeight: 'bold', color: 'white'}}>
-                            {type == 1 || type == 2 ? global.strings['password.enterPINTitle'] : (!step ? global.strings['password.enterNewPINTitle'] : global.strings['password.repeatNewPINTitle'])}
+                            {type == 1 || type == 2 || type == 3 ? global.strings['password.enterPINTitle'] : (!step ? global.strings['password.enterNewPINTitle'] : global.strings['password.repeatNewPINTitle'])}
                         </Text>
                     </View>
                     <View style={{width: '90%', marginTop: 20, marginBottom: 10}}>
@@ -442,7 +455,7 @@ class PasswordScreen extends PureComponent {
                                             size: 14,
                                             type: 'font-awesome',
                                             color: "white" }}
-                            title={((type == 1) || (type == 2)) ? global.strings['password.enterPassword'] : (!step ? global.strings['password.setPassword'] : global.strings['password.confirmPassword'])}
+                            title={((type == 1) || (type == 2) || (type == 3)) ? global.strings['password.enterPassword'] : (!step ? global.strings['password.setPassword'] : global.strings['password.confirmPassword'])}
                             containerStyle={{width: "100%", justifyContent: 'center'}}
                             buttonStyle={styles.buttonIn}
                             titleStyle={styles.buttonTitleIn}
