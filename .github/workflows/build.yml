@@ -2,7 +2,7 @@ name: Build Mobile Wallet
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, master ]
   workflow_dispatch:
 
 jobs:
@@ -25,6 +25,16 @@ jobs:
           distribution: 'temurin'
           java-version: '11'
 
+      - name: Restore Gradle cache
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('android/**/*.gradle', 'android/gradle/wrapper/gradle-wrapper.properties', 'yarn.lock') }}
+          restore-keys: |
+            gradle-${{ runner.os }}-
+
       - name: Install dependencies
         run: |
           yarn install --ignore-engines
@@ -34,7 +44,17 @@ jobs:
         run: |
           chmod +x android/gradlew
           cd android
-          ./gradlew assembleRelease
+          # Retry once: big build-tool jars occasionally get cut off on CI downloads
+          ./gradlew assembleRelease --stacktrace || ./gradlew assembleRelease --stacktrace
+
+      - name: Save Gradle cache
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('android/**/*.gradle', 'android/gradle/wrapper/gradle-wrapper.properties', 'yarn.lock') }}-${{ github.run_id }}
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
