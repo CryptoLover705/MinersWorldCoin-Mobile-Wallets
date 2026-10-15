@@ -63,7 +63,8 @@ class AddressBookScreen extends PureComponent {
         super(props);
 
         this.state = {
-            actionAddress: {index: 0, address: "", name: ""}
+            actionAddress: {index: 0, address: "", name: ""},
+            search: ""
         }
 
         Navigation.events().bindComponent(this);
@@ -147,17 +148,40 @@ class AddressBookScreen extends PureComponent {
         }
 
         const { addressBook } = this.props.wallet[timestamp];
-        const { actionAddress } = this.state;
+        const { actionAddress, search } = this.state;
+
+        // A-Z by name, filtered by the search box; keep each entry's original index
+        const needle = search.trim().toLowerCase();
+        const entries = addressBook
+            .map((item, index) => ({ item, index }))
+            .filter(({ item }) => !needle ||
+                (item.name || "").toLowerCase().includes(needle) ||
+                (item.address || "").toLowerCase().includes(needle))
+            .sort((a, b) => (a.item.name || "").toLowerCase().localeCompare((b.item.name || "").toLowerCase()));
 
         return (
             <View style={[styles.flex, , {alignSelf: 'center', width: '100%'}]}>
+                {addressBook.length >= 5 && <Input
+                    placeholder="Search name or address"
+                    leftIcon={{ name: 'search', type: 'font-awesome', size: 14, color: 'gray' }}
+                    containerStyle={{ width: '100%', paddingHorizontal: 10, marginTop: 10 }}
+                    inputContainerStyle={{ borderBottomColor: '#f0eff5' }}
+                    inputStyle={{ fontSize: 14 }}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    renderErrorMessage={false}
+                    onChangeText={(search) => this.setState({ search })}
+                />}
+                {addressBook.length > 0 && entries.length == 0 &&
+                    <Text style={{textAlign: 'center', color: 'gray', marginTop: 20}}>No matching addresses</Text>
+                }
                 {addressBook.length == 0 && <View style={{alignSelf: 'center', width: '100%', marginTop: 10, flex: 1, justifyContent: 'flex-end'}}>
                  <Text style={{textAlign: 'center', color: 'gray'}}>{global.strings['addressBook.empty']}</Text>
                 </View>}
                 <ScrollView style={{width: '100%'}}>
                     {
-                        addressBook.map((addressItem, key) => (
-                            <TouchableOpacity onPress={() => this.processAddress({...addressItem, index: key})} key={key}>
+                        entries.map(({ item: addressItem, index: key }) => (
+                            <TouchableOpacity onPress={() => this.processAddress({...addressItem, index: key})} key={addressItem.address + key}>
                                 <AddressItem params={addressItem} />
                             </TouchableOpacity>
                         ))
@@ -178,7 +202,7 @@ class AddressItem extends PureComponent {
 
         return (
             <View style={styles.basicContainer}>
-                <Avatar rounded title={params.name.substr(0,2)} size="medium" containerStyle={{marginRight: 10, backgroundColor: "black"}} />
+                <Avatar rounded title={(params.name || "?").substr(0,2).toUpperCase()} size="medium" containerStyle={{marginRight: 10, backgroundColor: "black"}} />
                 <View style={{flexDirection: 'column', justifyContent: 'center', alignItems: 'flex-start'}}>
                     <Text style={{fontSize: 12, color: "black"}} numberOfLines={2}>
                         <Text style={{fontWeight: 'bold'}}>{params.address.substr(0, 7)}</Text><Text style={{opacity: 0.8}}>{params.address.substr(7, 12)}...{params.address.substr(-14, 14)}</Text><Text style={{fontWeight: 'bold'}}>{params.address.substr(-6, 6)}</Text>

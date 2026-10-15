@@ -8,7 +8,8 @@ import {
     Alert,
     Image,
     TouchableWithoutFeedback,
-    Keyboard
+    Keyboard,
+    Clipboard
 } from 'react-native';
 import {
     Text,
@@ -21,7 +22,7 @@ import { Navigation } from 'react-native-navigation';
 import { responsiveHeight, responsiveWidth, responsiveFontSize } from 'react-native-responsive-dimensions';
 import { connectWallet } from 'src/redux';
 import { isAddress } from 'src/utils/WalletUtils';
-import { pushPasswordGate } from 'src/navigation';
+import { pushPasswordGate, ADD_ADDRESS_SCREEN } from 'src/navigation';
 
 const styles = StyleSheet.create({
     flex: {
@@ -101,18 +102,55 @@ class AddressInfoScreen extends PureComponent {
         }
 
         removeAddress = () => {
+            const { addressItem } = this.state;
+
+            Alert.alert(
+                global.strings['addressBook.removeButton'],
+                "Remove " + addressItem.name + " from your address book?",
+                [
+                    { text: "Cancel", style: "cancel" },
+                    { text: global.strings['addressBook.removeButton'], style: "destructive", onPress: () => this.doRemoveAddress() },
+                ],
+            );
+        }
+
+        doRemoveAddress = () => {
             const { setWalletValues } = this.props;
             const { addressItem, timestamp } = this.state;
-            var { addressBook } = this.props.wallet[timestamp];
+            const { addressBook } = this.props.wallet[timestamp];
 
-            for( var i = 0; i < addressBook.length; i++){
-                if ( addressBook[i].address === addressItem.address) {
-                    addressBook.splice(i, 1);
-                }
-            }
-
-            setWalletValues({addressBook, timestamp: timestamp});
+            setWalletValues({
+                addressBook: addressBook.filter((a) => a.address !== addressItem.address),
+                timestamp: timestamp
+            });
             this.cancel();
+        }
+
+        copyAddress = () => {
+            Clipboard.setString(this.state.addressItem.address);
+            Alert.alert(global.strings["addressInfo.title"], "Address copied to clipboard.");
+        }
+
+        // close this screen, then open the add-address screen in edit mode
+        editAddress = () => {
+            const { addressItem, timestamp } = this.state;
+            const done = () => Navigation.showModal({
+                stack: {
+                    children: [{
+                        component: {
+                            name: ADD_ADDRESS_SCREEN,
+                            passProps: {
+                                timestamp,
+                                name: addressItem.name,
+                                address: addressItem.address,
+                                editing: { address: addressItem.address }
+                            },
+                        }
+                    }]
+                }
+            });
+
+            Navigation.dismissModal(this.props.componentId).then(done, done);
         }
 
         openSendScreen = () => {
@@ -165,6 +203,32 @@ class AddressInfoScreen extends PureComponent {
                                 containerStyle={{width: "90%", justifyContent: 'space-around'}}
                                 titleStyle={styles.buttonTitleIn}
                                 onPress={this.openSendScreen}
+                            />
+                            </View>
+                            <View style={styles.buttonsContainer}>
+                            <Button
+                                icon={{ name: "pencil",
+                                                size: 14,
+                                                type: 'font-awesome',
+                                                color: "white" }}
+                                buttonStyle={styles.buttonOut}
+                                titleStyle={styles.buttonTitleOut}
+                                type='outline'
+                                containerStyle={{width: "44%", justifyContent: 'space-around', marginRight: "2%"}}
+                                title="Edit"
+                                onPress={this.editAddress}
+                            />
+                            <Button
+                                icon={{ name: "copy",
+                                                size: 14,
+                                                type: 'font-awesome',
+                                                color: "white" }}
+                                buttonStyle={styles.buttonOut}
+                                titleStyle={styles.buttonTitleOut}
+                                type='outline'
+                                containerStyle={{width: "44%", justifyContent: 'space-around', marginLeft: "2%"}}
+                                title="Copy"
+                                onPress={this.copyAddress}
                             />
                             </View>
                             <View style={styles.buttonsContainer}>

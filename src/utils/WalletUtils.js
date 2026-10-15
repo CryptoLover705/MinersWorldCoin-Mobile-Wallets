@@ -826,6 +826,21 @@ export function mergeTransactions(existing = {}, incoming = {}, options = {}) {
 	return { ...merged, ...incoming };
 }
 
+// Shorten a long string in the middle: "mwc1qabcd...wxyz1234"
+export function shortenMiddle(str, head = 8, tail = 8) {
+	if (!str) return "";
+	if (str.length <= head + tail + 1) return str;
+
+	return str.slice(0, head) + "…" + str.slice(-tail);
+}
+
+// Block explorer link for a transaction (EXPLORER_URL ends with "/", so strip it)
+export function explorerTxUrl(hash) {
+	const base = (Config.EXPLORER_URL || "").replace(/\/+$/, "");
+
+	return base + "/#/transaction/" + hash;
+}
+
 // Net effect of unconfirmed transactions on the balance, in satoshis (negative = outgoing).
 export function getPendingDelta(transactions = {}) {
 	return Object.values(transactions || {}).reduce((sum, t) => {
