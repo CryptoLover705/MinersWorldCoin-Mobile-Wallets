@@ -192,25 +192,35 @@ class AddressBookScreen extends PureComponent {
     }
 }
 
+// Split an address for display as: start ... end. Every character is shown at most once
+// (the old row printed the last 14 characters and then the last 6 again).
+function splitAddress(address = "", head = 10, tail = 8) {
+    if (address.length <= head + tail + 1) {
+        return { head: address, tail: "" };
+    }
+
+    return { head: address.slice(0, head), tail: address.slice(-tail) };
+}
+
 class AddressItem extends PureComponent {
     render = () => {
         const { params } = this.props;
-        var options = {
-            foreground: [32, 34, 37, 255],      // rgba gray
-            background: [240, 239, 245, 255],      // rgba black
-        };
+        const parts = splitAddress(params.address);
 
         return (
-            <View style={styles.basicContainer}>
+            <View style={[styles.basicContainer, {alignItems: 'center'}]}>
                 <Avatar rounded title={(params.name || "?").substr(0,2).toUpperCase()} size="medium" containerStyle={{marginRight: 10, backgroundColor: "black"}} />
-                <View style={{flexDirection: 'column', justifyContent: 'center', alignItems: 'flex-start'}}>
-                    <Text style={{fontSize: 12, color: "black"}} numberOfLines={2}>
-                        <Text style={{fontWeight: 'bold'}}>{params.address.substr(0, 7)}</Text><Text style={{opacity: 0.8}}>{params.address.substr(7, 12)}...{params.address.substr(-14, 14)}</Text><Text style={{fontWeight: 'bold'}}>{params.address.substr(-6, 6)}</Text>
-                    </Text>
-                    <Text style={{fontSize: 14, marginTop: 5}}>
+                <View style={{flex: 1, flexDirection: 'column', justifyContent: 'center', alignItems: 'flex-start'}}>
+                    <Text style={{fontSize: 16, fontWeight: 'bold', color: "black"}} numberOfLines={1}>
                         {params.name}
                     </Text>
+                    <Text style={{fontSize: 12, marginTop: 3, color: "#6b6b6b"}} numberOfLines={1}>
+                        <Text style={{fontWeight: 'bold', color: "#202225"}}>{parts.head}</Text>
+                        {parts.tail !== "" && <Text style={{color: "#8e8e93"}}>{" … "}</Text>}
+                        {parts.tail !== "" && <Text style={{fontWeight: 'bold', color: "#202225"}}>{parts.tail}</Text>}
+                    </Text>
                 </View>
+                <Icon name="angle-right" size={22} color="#c4c4c8" />
             </View>
         );
     }
