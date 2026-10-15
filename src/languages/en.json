@@ -119,6 +119,8 @@
 	"send.addressExampleInput": "9ExTRgiy5KqRtRurVUD2oBoUKNLMYn68tD",
 	"send.confirmButton": "Confirm",
 	"send.successAlert": "Success!",
+	"send.successAlertDetailed": "Transaction for {amount} {coin} has been sent to {address} with the txid of {txid}.",
+	"send.copyTxidButton": "Copy TXID",
 	"send.errorAlert": "Error sending transaction!",
 	"send.confirmAlertButton": "OK",
 	"send.dismissScanModalButton": "Close QR-scanner",

@@ -7,6 +7,7 @@ import {
   View,
   Alert,
   Image,
+  Clipboard,
 } from 'react-native';
 import {
   Text,
@@ -17,7 +18,7 @@ import AppLink from 'react-native-app-link';
 import { Navigation } from 'react-native-navigation';
 import { responsiveHeight, responsiveWidth, responsiveFontSize } from 'react-native-responsive-dimensions';
 import { connectWallet } from 'src/redux';
-import { sendTransaction, numberWithCommas } from 'src/utils/WalletUtils';
+import { sendTransaction, numberWithCommas, mergeTransactions } from 'src/utils/WalletUtils';
 import { pushPasswordGate } from 'src/navigation';
 import Config from 'react-native-config';
 import moment from "moment";
@@ -131,6 +132,36 @@ class ConfirmationScreen extends PureComponent {
     pushPasswordGate(3, timestamp, () => this.confirm());
   }
 
+  // Put the transaction in the wallet right away as "Pending" (replaced by the real one on confirm)
+  addPendingTransaction = (hash, amountSats, feeSats) => {
+    try {
+      const { updateWalletValues, address, timestamp } = this.props;
+      const { receiveAddress, transactions } = this.props.wallet[timestamp];
+      const now = Math.floor(Date.now() / 1000);
+
+      const pending = {
+        hash: hash,
+        confirmations: 0,
+        // same convention as confirmed sends: amount includes the fee
+        amount: Math.round(amountSats + feeSats),
+        fee: Math.round(feeSats),
+        lock: {},
+        time: now,
+        date: null,
+        type: 1,
+        from: receiveAddress,
+        to: address
+      };
+
+      updateWalletValues({
+        transactions: mergeTransactions(transactions || {}, { [now + hash]: pending }),
+        timestamp
+      });
+    } catch (e) {
+      console.log("could not add pending transaction", e);
+    }
+  }
+
   confirm = async () => {
     var { setWalletValues, amount, address, fee, from, timelock, timestamp } = this.props;
     const { addresses, receiveAddress } = this.props.wallet[timestamp];
@@ -164,10 +195,29 @@ class ConfirmationScreen extends PureComponent {
     }
 
     if(!("error" in tx)) {
+      // show it in the wallet straight away (amount/fee here are already in satoshis)
+      this.addPendingTransaction(tx.tx, amount, fee);
+
+      const template = global.strings['send.successAlertDetailed'] ||
+        "Transaction for {amount} {coin} has been sent to {address} with the txid of {txid}.";
+
+      const message = template
+        .replace("{amount}", String(this.props.amount))
+        .replace("{coin}", Config.COIN_NAME)
+        .replace("{address}", address)
+        .replace("{txid}", tx.tx);
+
       Alert.alert(
           global.strings['send.title'],
-          global.strings['send.successAlert'],
+          message,
           [
+            {
+              text: global.strings['send.copyTxidButton'] || "Copy TXID",
+              onPress: () => {
+                Clipboard.setString(tx.tx);
+                this.success(tx.tx);
+              },
+            },
             {
               text: global.strings['send.confirmAlertButton'],
               onPress: () => this.success(tx.tx),

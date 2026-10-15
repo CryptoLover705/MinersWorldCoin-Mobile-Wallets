@@ -18,7 +18,7 @@ import { TRANSACTION_DETAILS_SCREEN, pushWalletList } from 'src/navigation';
 import { Navigation } from 'react-native-navigation';
 import { connectWallet } from 'src/redux';
 import moment from "moment";
-import { subscribeToAddresses, getTransactionHistory, getAddressBalance, getWalletBalanceFromUTXOs, checkMempool, numberWithCommas, convertMWCtoUSD, formatUSD  } from 'src/utils/WalletUtils';
+import { subscribeToAddresses, getTransactionHistory, getAddressBalance, getWalletBalanceFromUTXOs, checkMempool, numberWithCommas, convertMWCtoUSD, formatUSD, mergeTransactions, getPendingDelta, getWalletBalanceStrict  } from 'src/utils/WalletUtils';
 import Config from 'react-native-config';
 
 const styles = StyleSheet.create({
@@ -115,6 +115,9 @@ class WalletScreen extends PureComponent {
         this.networkInterval = setInterval(() => {
             this.checkNetworkStatus();
         }, 3000);
+
+        // 🔄 Auto refresh: every 5s while a transaction is pending, otherwise every 20s
+        this.pollInterval = setInterval(this.pollTick, 5000);
     }
 
     componentWillUnmount() {
@@ -125,6 +128,10 @@ class WalletScreen extends PureComponent {
 
         if (this.networkInterval) {
             clearInterval(this.networkInterval);
+        }
+
+        if (this.pollInterval) {
+            clearInterval(this.pollInterval);
         }
 
         // 🧹 Remove AppState listener (new API)
@@ -140,6 +147,67 @@ class WalletScreen extends PureComponent {
         }
         this.setState({ appState: nextAppState });
     }
+
+    // 🔄 Auto refresh timer tick (5s while something is pending, 20s otherwise)
+    pollTick = () => {
+        if (AppState.currentState !== 'active') return;
+
+        const wallet = this.props.wallet[this.props.timestamp];
+        if (!wallet) return;
+
+        const hasPending = Object.values(wallet.transactions || {}).some(
+            (t) => t && !(t.confirmations > 0)
+        );
+
+        const wait = hasPending ? 4500 : 19500;
+
+        if (Date.now() - (this.lastPoll || 0) < wait) return;
+
+        this.pollRefresh();
+    }
+
+    // Background refresh. Never shows the spinner, and if any request fails it keeps the
+    // last good balance (instead of dropping to 0 like the manual refresh does).
+    pollRefresh = async () => {
+        const { updateWalletValues, setWalletValues, timestamp } = this.props;
+        const wallet = this.props.wallet[timestamp];
+
+        if (!wallet) return;
+
+        const { addresses, transactions } = wallet;
+
+        if (!addresses || Object.keys(addresses).length === 0) return;
+
+        if (this.polling || this.state.isRefreshing) return;
+        this.polling = true;
+        this.lastPoll = Date.now();
+
+        try {
+            const newTransactions = await getTransactionHistory(global.socketConnect, addresses, transactions);
+
+            // read the list again after the network call so a tx added meanwhile isn't lost
+            const latest = this.props.wallet[timestamp].transactions;
+            updateWalletValues({
+                transactions: mergeTransactions(latest, newTransactions, { dropStalePending: true }),
+                timestamp
+            });
+
+            const sats = await getWalletBalanceStrict(addresses, !!this.props.wallet[timestamp].isImported);
+            const totalBalance = sats / 1e8;
+
+            setWalletValues({
+                balance: { confirmed: totalBalance },
+                timestamp
+            });
+
+            const usd = await convertMWCtoUSD(totalBalance);
+            this.setState({ usdValue: usd });
+        } catch (e) {
+            console.warn("pollRefresh error (keeping last balance):", e);
+        }
+
+        this.polling = false;
+    };
 
     startCheckingMempool = () => {
         const { timestamp } = this.props;
@@ -161,7 +229,7 @@ class WalletScreen extends PureComponent {
             return;
         }
 
-        const mergedTransactions = { ...transactions, ...transactionObjects };
+        const mergedTransactions = mergeTransactions(transactions, transactionObjects);
         updateWalletValues({ transactions: mergedTransactions, timestamp });
 
         // ✅ Balance + USD merge
@@ -227,7 +295,7 @@ class WalletScreen extends PureComponent {
         try {
             // Pull latest transactions
             const newTransactions = await getTransactionHistory(global.socketConnect, addresses, transactions);
-            const mergedTransactions = { ...transactions, ...newTransactions };
+            const mergedTransactions = mergeTransactions(this.props.wallet[timestamp].transactions, newTransactions, { dropStalePending: true });
 
             updateWalletValues({ transactions: mergedTransactions, timestamp });
 
@@ -346,7 +414,12 @@ class WalletScreen extends PureComponent {
 
                 <View style={{ flex: 1 }}>
                     <View style={{ flexDirection: 'row' }}>
-                        <Text>{transaction.type ? "Sent" : "Received"}</Text>
+                        <Text>
+                            {transaction.type ? "Sent" : "Received"}
+                            {!(transaction.confirmations > 0) &&
+                                <Text style={{ color: '#e6a23c', fontWeight: 'bold' }}>{"  ·  Pending"}</Text>
+                            }
+                        </Text>
 
                         <Text style={{
                             flex: 1,
@@ -382,6 +455,7 @@ class WalletScreen extends PureComponent {
         const { isConnected, isRefreshing, usdValue } = this.state;
 
         const safeBalance = balance?.confirmed ?? 0;
+        const pendingDelta = getPendingDelta(transactions);
 
         return (
             <View style={styles.flex}>
@@ -395,6 +469,11 @@ class WalletScreen extends PureComponent {
                                 {usdValue != null && (
                                     <Text style={styles.usdValue}>
                                         ${usdValue.toFixed(8)}
+                                    </Text>
+                                )}
+                                {pendingDelta !== 0 && (
+                                    <Text style={styles.usdValue}>
+                                        Pending: {pendingDelta > 0 ? "+" : "-"}{numberWithCommas(Math.abs(pendingDelta / 1e8).toFixed(8))} {Config.COIN_NAME}
                                     </Text>
                                 )}
                             </TouchableOpacity>

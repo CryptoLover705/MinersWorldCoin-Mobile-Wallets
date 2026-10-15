@@ -741,37 +741,135 @@ async function createTransactionsFromHistory(socketConnect, walletAddresses, his
 	return transactionHistory;
 }
 
-export async function getTransactionHistory(socketConnect, walletAddresses, transactions = null) {
-	let allTxids = [];
+// Every txid for an address: confirmed history + mempool (so pending txs show up)
+async function fetchAddressTxids(address) {
+	const ids = [];
 
-	for (let address in walletAddresses) {
-		try {
-			const res = await axios.get(`${API}/history/${address}`);
-			allTxids.push(...res.data.result.tx);
-		} catch (e) {
-			console.log("history error", e);
-		}
+	try {
+		const res = await axios.get(`${API}/history/${address}`);
+		ids.push(...(res?.data?.result?.tx || []));
+	} catch (e) {
+		console.log("history error", e);
 	}
 
-	// remove duplicates
-	allTxids = [...new Set(allTxids)];
+	try {
+		const res = await axios.get(`${API}/mempool/${address}`);
+		ids.push(...(res?.data?.result?.tx || []));
+	} catch (e) {
+		// mempool lookup is best-effort
+	}
 
+	return ids;
+}
+
+export async function getTransactionHistory(socketConnect, walletAddresses, transactions = null) {
+	const histories = await Promise.all(
+		Object.keys(walletAddresses).map(fetchAddressTxids)
+	);
+
+	// remove duplicates
+	const allTxids = [...new Set(histories.flat())];
+
+	// What we already know: skip txs that are final (6+ confirmations) so polling stays cheap,
+	// and keep the first-seen time of pending txs so their list entry doesn't jump around.
+	const finalHashes = new Set();
+	const knownTime = {};
+
+	Object.values(transactions || {}).forEach((t) => {
+		if (!t || !t.hash) return;
+		if (t.confirmations >= 6) finalHashes.add(t.hash);
+		if (t.time) knownTime[t.hash] = t.time;
+	});
+
+	const nowSecs = Math.floor(Date.now() / 1000);
 	let txObjects = {};
 
 	await Promise.all(
-		allTxids.map(async (txid) => {
-			const tx = await getTransaction(txid);
-			if (!tx) return;
+		allTxids
+			.filter((txid) => !finalHashes.has(txid))
+			.map(async (txid) => {
+				const tx = await getTransaction(txid);
+				if (!tx) return;
 
-			const parsed = await createTransactionObject(null, walletAddresses, tx);
+				const parsed = await createTransactionObject(null, walletAddresses, tx);
 
-			if (parsed.time) {
+				// unconfirmed txs have no block time yet: don't drop them
+				parsed.time = parsed.time || knownTime[parsed.hash] || nowSecs;
+
 				txObjects[parsed.time + parsed.hash] = parsed;
-			}
-		})
+			})
 	);
 
 	return txObjects;
+}
+
+// Merge transaction maps by txid, so a pending tx is REPLACED (not duplicated) when it
+// confirms and its key (time + hash) changes. Optionally drops pending txs the network
+// no longer knows about (e.g. dropped from the mempool) after 2 hours.
+export function mergeTransactions(existing = {}, incoming = {}, options = {}) {
+	const incomingHashes = new Set(Object.values(incoming || {}).map((t) => t && t.hash));
+	const nowSecs = Math.floor(Date.now() / 1000);
+	const merged = {};
+
+	Object.keys(existing || {}).forEach((key) => {
+		const t = existing[key];
+		if (!t) return;
+		if (incomingHashes.has(t.hash)) return;
+
+		if (options.dropStalePending && !(t.confirmations > 0) && t.time && nowSecs - t.time > 7200) {
+			return;
+		}
+
+		merged[key] = t;
+	});
+
+	return { ...merged, ...incoming };
+}
+
+// Net effect of unconfirmed transactions on the balance, in satoshis (negative = outgoing).
+export function getPendingDelta(transactions = {}) {
+	return Object.values(transactions || {}).reduce((sum, t) => {
+		if (!t || t.confirmations > 0) return sum;
+
+		const amount = Number(t.amount) || 0;
+		return sum + (t.type ? -amount : amount);
+	}, 0);
+}
+
+// Wallet balance in satoshis that THROWS if any request fails, so background refreshes
+// can keep the last good balance instead of briefly showing a wrong (lower) one.
+export async function getWalletBalanceStrict(addresses, isImported = false) {
+	const addrs = Object.keys(addresses);
+
+	if (isImported) {
+		const lists = await Promise.all(
+			addrs.map(async (a) => {
+				const res = await axios.get(`${API}/unspent/${a}`);
+				return res?.data?.result || [];
+			})
+		);
+
+		const seen = new Set();
+		let total = 0;
+
+		lists.flat().forEach((u) => {
+			const key = `${u.txid}:${u.index}`;
+			if (seen.has(key)) return;
+			seen.add(key);
+			total += parseFloat(u.value) || 0;
+		});
+
+		return total;
+	}
+
+	const balances = await Promise.all(
+		addrs.map(async (a) => {
+			const res = await axios.get(`${API}/balance/${a}`);
+			return parseFloat(res?.data?.result?.balance ?? 0) || 0;
+		})
+	);
+
+	return balances.reduce((sum, b) => sum + b, 0);
 }
 
 export async function estimateFee(socketConnect, walletAddresses, options = {speed: "normal"}) {
