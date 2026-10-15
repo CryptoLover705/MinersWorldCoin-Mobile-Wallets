@@ -7,7 +7,9 @@ import {
     View,
     Alert,
     Clipboard,
-    ScrollView
+    ScrollView,
+    KeyboardAvoidingView,
+    Platform
 } from 'react-native';
 import {
     Text,
@@ -82,6 +84,25 @@ const styles = StyleSheet.create({
     },
 });
 
+// Pick `count` different word positions (sorted) to quiz the user on
+function pickWordIndexes(total, count = 3) {
+    const pool = Array.from({ length: total }, (_, i) => i);
+
+    for (let i = pool.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [pool[i], pool[j]] = [pool[j], pool[i]];
+    }
+
+    return pool.slice(0, Math.min(count, total)).sort((a, b) => a - b);
+}
+
+// true only if every asked word matches (ignores case and stray spaces)
+function backupAnswersCorrect(seedPhrase, indexes, answers) {
+    return indexes.every((wordIndex, i) =>
+        (answers[i] || "").trim().toLowerCase() === String(seedPhrase[wordIndex] || "").toLowerCase()
+    );
+}
+
 class CreateWalletScreen extends PureComponent {
 
     constructor(props) {
@@ -91,6 +112,7 @@ class CreateWalletScreen extends PureComponent {
             seedPhrase: generateSeedPhrase(),
             title: "",
             timestamp: 0,
+            verifying: null,
         }
 
         this.modalDismissedListener = null;
@@ -189,7 +211,7 @@ class CreateWalletScreen extends PureComponent {
                                     },
                                     {
                                         text: global.strings['createWallet.createWalletButton'],
-                                        onPress : () => this.openPasswordScreen(title),
+                                        onPress : () => this.startBackupCheck(title),
                                     },
                                 ],
                                 {cancelable: false},
@@ -209,11 +231,98 @@ class CreateWalletScreen extends PureComponent {
             }
     }
 
+    // ---- backup check: re-enter 3 random words before the wallet is created ----
+    startBackupCheck = (title) => {
+        const indexes = pickWordIndexes(this.state.seedPhrase.length, 3);
+
+        this.setState({
+            verifying: { title, indexes, answers: indexes.map(() => ""), error: false }
+        });
+    }
+
+    checkBackup = () => {
+        const { seedPhrase, verifying } = this.state;
+
+        if (backupAnswersCorrect(seedPhrase, verifying.indexes, verifying.answers)) {
+            const { title } = verifying;
+
+            this.setState({ verifying: null });
+            this.openPasswordScreen(title);
+        } else {
+            this.setState({ verifying: { ...verifying, error: true } });
+        }
+    }
+
+    renderBackupCheck = () => {
+        const { verifying } = this.state;
+
+        return (
+            <KeyboardAvoidingView
+                behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+                style={[StyleSheet.absoluteFillObject, { backgroundColor: 'white' }]}
+            >
+                <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding: 20, alignItems: 'center' }}>
+                    <Text h4 style={{ fontWeight: 'bold', color: 'black', textAlign: 'center' }}>
+                        Confirm your backup
+                    </Text>
+                    <Text style={{ fontSize: 14, color: 'black', textAlign: 'center', marginTop: 10, marginBottom: 20 }}>
+                        Enter these words from the seed phrase you just saved. Without a backup your funds can't be recovered if you lose this phone.
+                    </Text>
+
+                    {verifying.indexes.map((wordIndex, i) => (
+                        <Input
+                            key={wordIndex}
+                            label={"Word #" + (wordIndex + 1)}
+                            labelStyle={{ color: 'black' }}
+                            autoCapitalize="none"
+                            autoCorrect={false}
+                            spellCheck={false}
+                            value={verifying.answers[i]}
+                            containerStyle={{ width: '100%', marginBottom: 10 }}
+                            inputStyle={{ fontSize: 16, color: 'black' }}
+                            renderErrorMessage={false}
+                            onChangeText={(text) => {
+                                const answers = verifying.answers.slice();
+                                answers[i] = text;
+                                this.setState({ verifying: { ...verifying, answers, error: false } });
+                            }}
+                        />
+                    ))}
+
+                    {verifying.error &&
+                        <Text style={{ color: '#d3515e', fontWeight: 'bold', textAlign: 'center', marginBottom: 10 }}>
+                            One or more words are incorrect. Check your seed phrase and try again.
+                        </Text>
+                    }
+
+                    <Button
+                        icon={{ name: "check-circle", size: 14, type: 'font-awesome', color: "white" }}
+                        title="Confirm backup"
+                        containerStyle={{ width: "100%", marginTop: 10, justifyContent: 'center' }}
+                        buttonStyle={styles.buttonIn}
+                        titleStyle={styles.buttonTitleIn}
+                        onPress={this.checkBackup}
+                    />
+                    <Button
+                        title="Back to my seed phrase"
+                        type="clear"
+                        containerStyle={{ width: "100%", marginTop: 10, justifyContent: 'center' }}
+                        titleStyle={styles.buttonTitleOut}
+                        onPress={() => this.setState({ verifying: null })}
+                    />
+                </ScrollView>
+            </KeyboardAvoidingView>
+        );
+    }
+
     openPasswordScreen = (title) => {
         const { seedPhrase } = this.state;
         const { addNewWallet, setWalletValues } = this.props;
 
         var timestamp = parseInt(new Date() / 1000);
+        while (timestamp in this.props.wallet) {
+            timestamp += 1;
+        }
 
         this.setState({timestamp});
 
@@ -299,6 +408,7 @@ class CreateWalletScreen extends PureComponent {
                             onPress={() => this.warningPopUp()}
                         />
                     </View>
+                {this.state.verifying && this.renderBackupCheck()}
             </View>
         );
     }

@@ -23,7 +23,7 @@ import {
 
 import { Navigation } from 'react-native-navigation';
 import { connectWallet, connectPassword } from 'src/redux';
-import { isValidWIF } from 'src/utils/WalletUtils';
+import { isValidWIF, generateAddressesFromWIF } from 'src/utils/WalletUtils';
 
 const styles = StyleSheet.create({
     flex: {
@@ -130,6 +130,36 @@ class ImportWalletScreen extends PureComponent {
         );
     };
 
+    // Returns the key (timestamp) of an existing wallet that already holds this seed phrase /
+    // private key, or undefined. Seeds compare ignoring case; a private key also matches when
+    // one of its addresses is already inside another wallet.
+    findDuplicateWallet = (seedWords, cleanWif) => {
+        const { wallet } = this.props;
+        const wantedSeed = seedWords.map(w => String(w).toLowerCase()).join(" ");
+
+        let wifAddresses = [];
+        if (cleanWif) {
+            try {
+                wifAddresses = Object.keys(generateAddressesFromWIF(cleanWif));
+            } catch (e) {}
+        }
+
+        return Object.keys(wallet).find((ts) => {
+            const w = wallet[ts];
+
+            if (!w || typeof w !== 'object' || !w.isCreated) return false;
+
+            if (cleanWif) {
+                if (w.wifKey && w.wifKey === cleanWif) return true;
+
+                return !!w.addresses && wifAddresses.some(a => a in w.addresses);
+            }
+
+            return Array.isArray(w.seedPhrase) &&
+                w.seedPhrase.map(x => String(x).toLowerCase()).join(" ") === wantedSeed;
+        });
+    };
+
     warningPopUp = () => {
 
         const { seedPhrase, wifKey, title } = this.state;
@@ -189,6 +219,40 @@ class ImportWalletScreen extends PureComponent {
             );
             return;
         }
+
+        // DUPLICATE CHECK: is this seed / key already a wallet in this app?
+        if (!this.duplicateAcknowledged) {
+            const existingTs = this.findDuplicateWallet(processedSeedPhrase, isWif ? cleanWif : "");
+
+            if (existingTs) {
+                const existing = this.props.wallet[existingTs];
+
+                Alert.alert(
+                    global.strings['importWallet.title'],
+                    "This " + (isWif ? "private key" : "seed phrase") + " is already in this app as \"" + existing.title + "\".",
+                    [
+                        { text: "Cancel", style: "cancel" },
+                        {
+                            text: "Open existing wallet",
+                            onPress: () => pushPasswordGate(1, existingTs)
+                        },
+                        {
+                            text: "Import anyway",
+                            onPress: () => {
+                                this.duplicateAcknowledged = true;
+                                this.warningPopUp();
+                            }
+                        }
+                    ],
+                    { cancelable: false }
+                );
+
+                return;
+            }
+        }
+
+        // asked once per attempt: editing the form later checks again
+        this.duplicateAcknowledged = false;
 
         // CONFIRMATION (importing never touches your existing wallets)
 
