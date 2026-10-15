@@ -715,6 +715,18 @@ export async function createTransactionObject(socketConnect, walletAddresses, tr
 		transaction.date = null;
 	}
 
+	// Outputs paid to P2SH addresses that are not ours: these can be time locks created
+	// with the web wallet (P2SH CLTV, addresses starting with "5"). See findLockUnlockTime.
+	transaction.p2shOutputs = [];
+	for (var k = 0; k < (transactionVerbose.vout || []).length; k++) {
+		const out = transactionVerbose.vout[k];
+		const outAddress = out && out.scriptPubKey && out.scriptPubKey.addresses && out.scriptPubKey.addresses[0];
+
+		if (outAddress && !(outAddress in walletAddresses) && isP2SHAddress(outAddress)) {
+			transaction.p2shOutputs.push({ address: outAddress, value: out.value });
+		}
+	}
+
 	return transaction;
 }
 
@@ -777,7 +789,7 @@ export async function getTransactionHistory(socketConnect, walletAddresses, tran
 
 	Object.values(transactions || {}).forEach((t) => {
 		if (!t || !t.hash) return;
-		if (t.confirmations >= 6) finalHashes.add(t.hash);
+		if (t.confirmations >= 6 && (t.type !== 1 || t.p2shOutputs !== undefined)) finalHashes.add(t.hash);
 		if (t.time) knownTime[t.hash] = t.time;
 	});
 
@@ -1108,4 +1120,225 @@ export async function checkMempool(socketConnect, walletAddresses, address, call
 	} catch (e) {
 		console.log('mempool error: ', e);
 	}
+}
+
+
+// ===================== Time locks (P2SH CLTV, created by the web wallet) =====================
+// A lock is a P2SH address (version byte 10, so it always starts with "5") wrapping
+//     <unlock-time> OP_CHECKLOCKTIMEVERIFY OP_DROP <33-byte pubkey> OP_CHECKSIG
+// The unlock time stays hidden on-chain until the coins are spent and the API cannot list locks,
+// so the wallet finds them itself: it takes the P2SH addresses it has sent coins to and tries
+// the unlock times the web wallet's presets would have produced (see findLockUnlockTime).
+
+export const LOCK_PRESET_DAYS = [30, 60, 90, 180, 365];
+const CLTV_TIME_THRESHOLD = 500000000; // below this a CLTV value is a block height, not a date
+
+export function isP2SHAddress(address) {
+	try {
+		return bitcoin.address.fromBase58Check(address).version === mwc.scriptHash;
+	} catch (e) {
+		return false;
+	}
+}
+
+// Public key (hex) the web wallet uses for this wallet: the first receive address,
+// m/44'/0'/0'/0/0 (or the imported private key for WIF wallets).
+export function getWalletLockPubkey(wallet) {
+	try {
+		const entry = wallet && wallet.addresses && wallet.addresses[wallet.receiveAddress];
+
+		if (!entry || !entry.privateKey) return null;
+
+		return bitcoin.ECPair.fromWIF(entry.privateKey, mwc).publicKey.toString('hex');
+	} catch (e) {
+		return null;
+	}
+}
+
+export function lockRedeemScript(unlockTime, pubkeyHex) {
+	const lockBytes = bitcoin.script.number.encode(unlockTime);
+
+	return Buffer.concat([
+		Buffer.from([lockBytes.length]),
+		lockBytes,
+		Buffer.from([0xb1, 0x75, 0x21]), // OP_CHECKLOCKTIMEVERIFY OP_DROP <push 33 bytes>
+		Buffer.from(pubkeyHex, 'hex'),
+		Buffer.from([0xac])              // OP_CHECKSIG
+	]);
+}
+
+export function lockAddress(unlockTime, pubkeyHex) {
+	return bitcoin.address.toBase58Check(
+		bitcoin.crypto.hash160(lockRedeemScript(unlockTime, pubkeyHex)),
+		mwc.scriptHash
+	);
+}
+
+// Tries every unlock time in the given ranges against the given lock addresses.
+// Returns { index, unlockTime } for the first match (index = position in `addresses`), else null.
+// Works in small slices so the UI stays responsive.
+async function searchLockTimes(pubkeyHex, addresses, ranges, shouldCancel) {
+	const pub = Buffer.from(pubkeyHex || "", 'hex');
+	if (pub.length !== 33) return null;
+
+	const targets = addresses.map((a) => {
+		try {
+			const d = bitcoin.address.fromBase58Check(a);
+			return d.version === mwc.scriptHash ? d.hash : null;
+		} catch (e) {
+			return null;
+		}
+	});
+
+	// Fast path: unlock times from 0x800000 to 0x7fffffff are always encoded in exactly 4 bytes,
+	// so the script is a fixed 42-byte template where only the 4 time bytes change.
+	const script = Buffer.alloc(42);
+	script[0] = 4;
+	script[5] = 0xb1;
+	script[6] = 0x75;
+	script[7] = 0x21;
+	pub.copy(script, 8);
+	script[41] = 0xac;
+
+	let sinceYield = 0;
+
+	for (const range of ranges) {
+		const from = Math.max(range.from, 0x800000);
+		const to = Math.min(range.to, 0x7fffffff);
+
+		for (let t = from; t <= to; t++) {
+			script[1] = t & 0xff;
+			script[2] = (t >>> 8) & 0xff;
+			script[3] = (t >>> 16) & 0xff;
+			script[4] = (t >>> 24) & 0xff;
+
+			const hash = bitcoin.crypto.hash160(script);
+
+			for (let i = 0; i < targets.length; i++) {
+				if (targets[i] && hash.equals(targets[i])) {
+					return { index: i, unlockTime: t };
+				}
+			}
+
+			if (++sinceYield >= 400) {
+				sinceYield = 0;
+				await new Promise((resolve) => setTimeout(resolve, 0));
+				if (shouldCancel && shouldCancel()) return null;
+			}
+		}
+	}
+
+	return null;
+}
+
+// The web wallet sets the unlock time to (moment you pick a preset) + 30/60/90/180/365 days,
+// shortly before the lock is funded. So the unlock time lies just before
+// (funding time + preset days): look back 6 hours, with 10 minutes of clock slack.
+export async function findLockUnlockTime(pubkeyHex, address, fundTime, shouldCancel) {
+	const ranges = LOCK_PRESET_DAYS.map((days) => ({
+		from: fundTime + days * 86400 - 6 * 3600,
+		to: fundTime + days * 86400 + 600
+	}));
+
+	const hit = await searchLockTimes(pubkeyHex, [address], ranges, shouldCancel);
+
+	return hit ? hit.unlockTime : null;
+}
+
+// Manual lookup: which of `addresses` is the lock for an unlock time between from and to?
+export async function findLockInRange(pubkeyHex, addresses, from, to) {
+	return searchLockTimes(pubkeyHex, addresses, [{ from, to }]);
+}
+
+// Confirmed balance (satoshis) of a lock address. Throws on network failure.
+export async function getLockBalance(address) {
+	const res = await axios.get(`${API}/balance/${address}`);
+
+	return parseFloat(res?.data?.result?.balance ?? 0) || 0;
+}
+
+// P2SH outputs the wallet has sent coins to that might be locks (earliest funding time kept).
+export function collectLockCandidates(transactions, addresses) {
+	const own = addresses || {};
+	const found = {};
+	const nowSecs = Math.floor(Date.now() / 1000);
+
+	Object.values(transactions || {}).forEach((t) => {
+		if (!t || t.type !== 1 || !Array.isArray(t.p2shOutputs)) return;
+
+		t.p2shOutputs.forEach((o) => {
+			if (!o || !o.address || o.address in own) return;
+
+			const fundTime = t.time || nowSecs;
+
+			if (!found[o.address] || fundTime < found[o.address].fundTime) {
+				found[o.address] = { address: o.address, fundTime, txid: t.hash };
+			}
+		});
+	});
+
+	return Object.values(found);
+}
+
+// Split the known locks into still-locked and unlocked-but-not-yet-redeemed coins.
+export function summarizeLocks(locks, nowSec) {
+	const list = Object.values(locks || {})
+		.filter((l) => l && l.balance > 0)
+		.map((l) => ({ ...l, unlocked: l.unlockTime <= nowSec }))
+		.sort((a, b) => a.unlockTime - b.unlockTime);
+
+	const locked = list.filter((l) => !l.unlocked);
+	const ready = list.filter((l) => l.unlocked);
+	const sum = (arr) => arr.reduce((total, l) => total + l.balance, 0);
+
+	return {
+		list,
+		hasLocks: list.length > 0,
+		lockedSats: sum(locked),
+		readySats: sum(ready),
+		lockedCount: locked.length,
+		nextUnlock: locked.length ? locked[0].unlockTime : null
+	};
+}
+
+export function formatLockRemaining(secs) {
+	secs = Math.max(0, Math.floor(secs));
+
+	const d = Math.floor(secs / 86400);
+	const h = Math.floor((secs % 86400) / 3600);
+	const m = Math.floor((secs % 3600) / 60);
+
+	if (d > 0) return d + "d " + h + "h";
+	if (h > 0) return h + "h " + m + "m";
+	if (m > 0) return m + "m";
+
+	return secs > 0 ? "<1m" : "0m";
+}
+
+// Unlock time typed by the user: unix seconds, "YYYY-MM-DD HH:mm:ss" (exact) or
+// "YYYY-MM-DD HH:mm" (any second within that minute). Local time. Returns null if not understood.
+export function parseUnlockInput(text) {
+	const s = String(text || "").trim();
+
+	if (/^\d{9,10}$/.test(s)) {
+		const t = parseInt(s, 10);
+		return t >= CLTV_TIME_THRESHOLD ? { exact: t } : null;
+	}
+
+	const m = s.match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})(?::(\d{2}))?$/);
+	if (!m) return null;
+
+	const [y, mo, d, h, mi] = [+m[1], +m[2], +m[3], +m[4], +m[5]];
+	const sec = m[6] !== undefined ? +m[6] : 0;
+	const date = new Date(y, mo - 1, d, h, mi, sec);
+
+	// reject impossible dates such as 2026-02-31
+	if (date.getFullYear() !== y || date.getMonth() !== mo - 1 || date.getDate() !== d ||
+		date.getHours() !== h || date.getMinutes() !== mi) return null;
+
+	const t = Math.floor(date.getTime() / 1000);
+
+	if (t < CLTV_TIME_THRESHOLD) return null;
+
+	return m[6] !== undefined ? { exact: t } : { from: t, to: t + 59 };
 }
