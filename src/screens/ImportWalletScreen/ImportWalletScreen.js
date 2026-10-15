@@ -160,6 +160,20 @@ class ImportWalletScreen extends PureComponent {
         });
     };
 
+    showDuplicateAlert = (existingTs, isWif) => {
+        const existing = this.props.wallet[existingTs];
+
+        Alert.alert(
+            global.strings['importWallet.title'],
+            "This " + (isWif ? "private key" : "seed phrase") + " has already been imported as \"" + existing.title + "\", so it can't be imported again.",
+            [
+                { text: "OK", style: "cancel" },
+                { text: "Open existing wallet", onPress: () => pushPasswordGate(1, existingTs) }
+            ],
+            { cancelable: false }
+        );
+    };
+
     warningPopUp = () => {
 
         const { seedPhrase, wifKey, title } = this.state;
@@ -220,39 +234,13 @@ class ImportWalletScreen extends PureComponent {
             return;
         }
 
-        // DUPLICATE CHECK: is this seed / key already a wallet in this app?
-        if (!this.duplicateAcknowledged) {
-            const existingTs = this.findDuplicateWallet(processedSeedPhrase, isWif ? cleanWif : "");
+        // DUPLICATE CHECK: a seed / key that is already a wallet in this app can't be imported again
+        const existingTs = this.findDuplicateWallet(processedSeedPhrase, isWif ? cleanWif : "");
 
-            if (existingTs) {
-                const existing = this.props.wallet[existingTs];
-
-                Alert.alert(
-                    global.strings['importWallet.title'],
-                    "This " + (isWif ? "private key" : "seed phrase") + " is already in this app as \"" + existing.title + "\".",
-                    [
-                        { text: "Cancel", style: "cancel" },
-                        {
-                            text: "Open existing wallet",
-                            onPress: () => pushPasswordGate(1, existingTs)
-                        },
-                        {
-                            text: "Import anyway",
-                            onPress: () => {
-                                this.duplicateAcknowledged = true;
-                                this.warningPopUp();
-                            }
-                        }
-                    ],
-                    { cancelable: false }
-                );
-
-                return;
-            }
+        if (existingTs) {
+            this.showDuplicateAlert(existingTs, isWif);
+            return;
         }
-
-        // asked once per attempt: editing the form later checks again
-        this.duplicateAcknowledged = false;
 
         // CONFIRMATION (importing never touches your existing wallets)
 
@@ -293,6 +281,17 @@ class ImportWalletScreen extends PureComponent {
 
         const { setWalletValues, addNewWallet, wallet } = this.props;
         const { wifKey } = this.state;
+
+        // last line of defence: never create a second wallet for the same seed / key
+        const duplicateTs = this.findDuplicateWallet(
+            processedSeedPhrase,
+            (wifKey && wifKey.trim()) ? wifKey.trim() : ""
+        );
+
+        if (duplicateTs) {
+            this.showDuplicateAlert(duplicateTs, !!(wifKey && wifKey.trim()));
+            return;
+        }
 
         // Wallets are keyed by timestamp. Make sure the key is brand new so we
         // can never land on (and reset) an existing wallet.
