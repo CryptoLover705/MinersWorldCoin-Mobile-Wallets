@@ -273,7 +273,7 @@ class ConfirmationScreen extends PureComponent {
     const addressBook = (this.props.wallet[timestamp] && this.props.wallet[timestamp].addressBook) || [];
     const saved = addressBook.find((a) => a.address === address);
 
-    const linkStyle = { color: '#6c82cf', fontWeight: 'bold', textDecorationLine: 'underline' };
+    const linkStyle = { color: '#8ab4ff', fontWeight: 'bold', textDecorationLine: 'underline' };
 
     return (
       <View style={[StyleSheet.absoluteFillObject, { backgroundColor: '#202225', alignItems: 'center', justifyContent: 'center', padding: 20 }]}>
@@ -283,12 +283,12 @@ class ConfirmationScreen extends PureComponent {
           {global.strings['send.title']}
         </Text>
 
-        <Text style={{ fontSize: 15, color: 'white', opacity: 0.9, textAlign: 'center', marginTop: 15, lineHeight: 24 }}>
+        <Text style={{ fontSize: 15, color: 'white', textAlign: 'center', marginTop: 15, lineHeight: 24 }}>
           {"Transaction for "}
-          <Text style={{ fontWeight: 'bold' }}>{amount} {Config.COIN_NAME}</Text>
+          <Text style={{ fontWeight: 'bold', color: 'white' }}>{amount} {Config.COIN_NAME}</Text>
           {" has been sent to "}
           {saved
-            ? <Text style={{ fontWeight: 'bold' }}>{saved.name} ({shortenMiddle(address, 6, 6)})</Text>
+            ? <Text style={{ fontWeight: 'bold', color: 'white' }}>{saved.name} ({shortenMiddle(address, 6, 6)})</Text>
             : <Text style={linkStyle} onPress={this.addToAddressBook}>{shortenMiddle(address, 10, 8)}</Text>
           }
           {" with the txid of "}
@@ -296,7 +296,7 @@ class ConfirmationScreen extends PureComponent {
           {"."}
         </Text>
 
-        <Text style={{ fontSize: 12, color: 'gray', textAlign: 'center', marginTop: 10 }}>
+        <Text style={{ fontSize: 12, color: '#b9bbbe', textAlign: 'center', marginTop: 10 }}>
           {saved
             ? "This address is in your address book."
             : "Tap the address to save it to your address book."}
