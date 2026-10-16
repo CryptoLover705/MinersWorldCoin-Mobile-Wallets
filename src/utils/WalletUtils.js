@@ -453,6 +453,7 @@ export async function sendTransaction(
     let outputsAmount = 0;
     let keyPairs = [];
     let scripts = [];
+    const usedOutpoints = new Set();
 
     const txb = new bitcoin.TransactionBuilder(mwc);
     txb.setVersion(2);
@@ -473,6 +474,11 @@ export async function sendTransaction(
             for (let k = 0; k < utxo.length; k++) {
 
                 if (outputsAmount >= (amount + fee)) break;
+
+                // the same coin can come back under several address forms of one key: spend it once
+                const outpoint = `${utxo[k].txid}:${utxo[k].index}`;
+                if (usedOutpoints.has(outpoint)) continue;
+                usedOutpoints.add(outpoint);
 
                 const script = Buffer.from(utxo[k].script, 'hex');
                 const type = getScriptType(script);
@@ -861,6 +867,13 @@ export function getPendingDelta(transactions = {}) {
 		const amount = Number(t.amount) || 0;
 		return sum + (t.type ? -amount : amount);
 	}, 0);
+}
+
+// One key has several address forms (legacy "9...", segwit "5...", bech32 "mwc1...") and the API can
+// report the same coin under more than one of them. So any wallet holding more than one address
+// (imported seeds, imported private keys) must count coins by txid:index, never per address.
+export function shouldDedupeBalance(wallet) {
+	return !!wallet && (!!wallet.isImported || Object.keys(wallet.addresses || {}).length > 1);
 }
 
 // Wallet balance in satoshis that THROWS if any request fails, so background refreshes

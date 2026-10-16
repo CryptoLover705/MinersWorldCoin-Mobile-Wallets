@@ -23,7 +23,7 @@ import { TRANSACTION_DETAILS_SCREEN, pushWalletList } from 'src/navigation';
 import { Navigation } from 'react-native-navigation';
 import { connectWallet } from 'src/redux';
 import moment from "moment";
-import { subscribeToAddresses, getTransactionHistory, getAddressBalance, getWalletBalanceFromUTXOs, checkMempool, numberWithCommas, convertMWCtoUSD, formatUSD, mergeTransactions, getPendingDelta, getWalletBalanceStrict, getWalletLockPubkey, findLockUnlockTime, findLockInRange, getLockBalance, collectLockCandidates, summarizeLocks, formatLockRemaining, parseUnlockInput, lockAddress  } from 'src/utils/WalletUtils';
+import { subscribeToAddresses, getTransactionHistory, getAddressBalance, getWalletBalanceFromUTXOs, checkMempool, numberWithCommas, convertMWCtoUSD, formatUSD, mergeTransactions, getPendingDelta, getWalletBalanceStrict, getWalletLockPubkey, findLockUnlockTime, findLockInRange, getLockBalance, collectLockCandidates, summarizeLocks, formatLockRemaining, parseUnlockInput, lockAddress, shouldDedupeBalance  } from 'src/utils/WalletUtils';
 import Config from 'react-native-config';
 
 const styles = StyleSheet.create({
@@ -476,7 +476,7 @@ class WalletScreen extends PureComponent {
                 timestamp
             });
 
-            const sats = await getWalletBalanceStrict(addresses, !!this.props.wallet[timestamp].isImported);
+            const sats = await getWalletBalanceStrict(addresses, shouldDedupeBalance(this.props.wallet[timestamp]));
             const totalBalance = sats / 1e8;
 
             setWalletValues({
@@ -522,7 +522,7 @@ class WalletScreen extends PureComponent {
         try {
             let totalBalance = 0;
 
-            if (this.props.wallet[timestamp].isImported) {
+            if (this.props.wallet[timestamp].isImported || shouldDedupeBalance(this.props.wallet[timestamp])) {
                 // 🔥 UTXO dedupe path (imported wallets only)
                 const res = await getWalletBalanceFromUTXOs(addresses);
                 totalBalance = (res.confirmed || 0) / 1e8;
@@ -588,7 +588,7 @@ class WalletScreen extends PureComponent {
             // ✅ Real-time balance from API
             let totalBalance = 0;
 
-            if (this.props.wallet[timestamp].isImported) {
+            if (this.props.wallet[timestamp].isImported || shouldDedupeBalance(this.props.wallet[timestamp])) {
                 // 🔥 UTXO dedupe path (imported wallets only)
                 const res = await getWalletBalanceFromUTXOs(addresses);
                 totalBalance = (res.confirmed || 0) / 1e8;
@@ -629,7 +629,7 @@ class WalletScreen extends PureComponent {
         try {
             let totalBalance = 0;
 
-            if (this.props.wallet[timestamp].isImported) {
+            if (this.props.wallet[timestamp].isImported || shouldDedupeBalance(this.props.wallet[timestamp])) {
                 // 🔥 UTXO dedupe path (imported wallets only)
                 const res = await getWalletBalanceFromUTXOs(addresses);
                 totalBalance = (res.confirmed || 0) / 1e8;

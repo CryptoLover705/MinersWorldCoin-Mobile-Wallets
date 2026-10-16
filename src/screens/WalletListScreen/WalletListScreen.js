@@ -13,7 +13,7 @@ import {
     Text,
 } from 'react-native-elements';
 import { WALLET_SCREEN, pushStarterStack, pushPasswordGate } from 'src/navigation';
-import { getMirgationWallets, removeMirgationWallets, decryptData, decryptWallet, numberWithCommas, convertMWCtoUSD, getAddressBalance, getWalletBalanceFromUTXOs, generateAddresses } from 'src/utils/WalletUtils';
+import { getMirgationWallets, removeMirgationWallets, decryptData, decryptWallet, numberWithCommas, convertMWCtoUSD, getAddressBalance, getWalletBalanceFromUTXOs, generateAddresses, shouldDedupeBalance, getWalletBalanceStrict, summarizeLocks } from 'src/utils/WalletUtils';
 import { Navigation } from 'react-native-navigation';
 import { connectWallet } from 'src/redux';
 import Config from 'react-native-config';
@@ -161,7 +161,8 @@ class WalletItem extends PureComponent {
 
         this.state = {
             usdValue: null,
-            balance: null
+            balance: null,
+            lockedCoins: 0
         };
 
         this.polling = null;
@@ -183,7 +184,10 @@ class WalletItem extends PureComponent {
         try {
             let total = 0;
 
-            if (params.isImported) {
+            if (shouldDedupeBalance(params)) {
+                // 🔥 several addresses per key: count every coin once (by txid:index), not per address
+                total = (await getWalletBalanceStrict(params.addresses, true)) / 1e8;
+            } else if (params.isImported) {
                 // 🔥 UTXO dedupe for imported wallets
                 const res = await getWalletBalanceFromUTXOs(params.addresses);
                 total = (res.confirmed || 0) / 1e8;
@@ -198,12 +202,17 @@ class WalletItem extends PureComponent {
                 }
             }
 
+            // coins locked with the web wallet still belong to this wallet: include them in the total
+            const lockSummary = summarizeLocks(params.locks, Math.floor(Date.now() / 1000));
+            const lockedCoins = (lockSummary.lockedSats + lockSummary.readySats) / 1e8;
+            total += lockedCoins;
+
             let usdValue = await convertMWCtoUSD(total);
             if (typeof usdValue !== "number" || isNaN(usdValue)) {
                 usdValue = 0; // fallback if API failed
             }
 
-            this.setState({ usdValue, balance: total });
+            this.setState({ usdValue, balance: total, lockedCoins });
 
         } catch (e) {
             console.log("Error updating wallet balance/price", e);
@@ -228,6 +237,9 @@ class WalletItem extends PureComponent {
                             : global.strings['walletList.notMigrated']
                         }
                     </Text>
+                    {this.state.lockedCoins > 0 && <Text style={{fontSize: 11, color: "#c98a1b", marginTop: 2}}>
+                        {"incl. " + numberWithCommas(this.state.lockedCoins.toFixed(8)) + " " + Config.COIN_NAME + " locked"}
+                    </Text>}
                     {usdValue != null && <Text style={{fontSize: 12, color: "black", marginTop: 2}}>
                         ${usdValue.toFixed(8)}
                     </Text>}
