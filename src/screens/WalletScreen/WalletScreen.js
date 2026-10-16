@@ -19,11 +19,11 @@ import {
     Button
 } from 'react-native-elements';
 import Icon from 'react-native-vector-icons/Entypo';
-import { TRANSACTION_DETAILS_SCREEN, pushWalletList } from 'src/navigation';
+import { TRANSACTION_DETAILS_SCREEN, pushWalletList, pushPasswordGate } from 'src/navigation';
 import { Navigation } from 'react-native-navigation';
 import { connectWallet } from 'src/redux';
 import moment from "moment";
-import { subscribeToAddresses, getTransactionHistory, getAddressBalance, getWalletBalanceFromUTXOs, checkMempool, numberWithCommas, convertMWCtoUSD, formatUSD, mergeTransactions, getPendingDelta, getWalletBalanceStrict, getWalletLockPubkey, findLockUnlockTime, findLockInRange, getLockBalance, collectLockCandidates, summarizeLocks, formatLockRemaining, parseUnlockInput, lockAddress, shouldDedupeBalance  } from 'src/utils/WalletUtils';
+import { subscribeToAddresses, getTransactionHistory, getAddressBalance, getWalletBalanceFromUTXOs, checkMempool, numberWithCommas, convertMWCtoUSD, formatUSD, mergeTransactions, getPendingDelta, getWalletBalanceStrict, getWalletLockPubkey, findLockUnlockTime, findLockInRange, getLockBalance, collectLockCandidates, summarizeLocks, formatLockRemaining, parseUnlockInput, lockAddress, shouldDedupeBalance, sendTransaction, buildLockRedeemTransaction, getLockUtxos, broadcastRawTransaction, friendlyBroadcastError, getDefaultFeeSats, shortenMiddle  } from 'src/utils/WalletUtils';
 import Config from 'react-native-config';
 
 const styles = StyleSheet.create({
@@ -75,7 +75,11 @@ class WalletScreen extends PureComponent {
             showLocks: false,
             scanningLocks: false,
             lockInput: "",
-            addingLock: false
+            addingLock: false,
+            lockAmount: "",
+            lockDays: 30,
+            creatingLock: false,
+            redeemingAddress: null
         };
 
         Navigation.mergeOptions(this.props.componentId, {
@@ -304,6 +308,234 @@ class WalletScreen extends PureComponent {
         }
     };
 
+    // Show a transaction in the list straight away, as pending (replaced by the real one when it confirms)
+    addLocalPendingTx = (hash, amountSats, feeSats, type, from, to, p2shOutputs) => {
+        try {
+            const { updateWalletValues, timestamp } = this.props;
+            const transactions = this.props.wallet[timestamp].transactions || {};
+            const now = Math.floor(Date.now() / 1000);
+
+            const pending = {
+                hash,
+                confirmations: 0,
+                amount: Math.round(amountSats),
+                fee: Math.round(feeSats),
+                lock: {},
+                time: now,
+                date: null,
+                type,
+                from,
+                to,
+                p2shOutputs: p2shOutputs || []
+            };
+
+            updateWalletValues({
+                transactions: mergeTransactions(transactions, { [now + hash]: pending }),
+                timestamp
+            });
+        } catch (e) {
+            console.log("could not add pending transaction", e);
+        }
+    };
+
+    // ---- redeem a matured lock back to this wallet ----
+    confirmRedeem = async (address) => {
+        const { timestamp } = this.props;
+        const wallet = this.props.wallet[timestamp];
+        const lock = (wallet.locks || {})[address];
+        const say = (message) => Alert.alert("Time locks", message);
+
+        if (this.state.redeemingAddress) return;
+        if (!lock || !(lock.balance > 0)) return say("There are no coins to redeem at this lock.");
+        if (lock.unlockTime > Math.floor(Date.now() / 1000)) return say("This lock has not reached its unlock time yet.");
+
+        const fee = await getDefaultFeeSats();
+
+        Alert.alert(
+            "Redeem unlocked coins",
+            "Move " + numberWithCommas((lock.balance / 1e8).toFixed(8)) + " " + Config.COIN_NAME + " from this lock to your wallet?" +
+            "\n\nNetwork fee: " + numberWithCommas((fee / 1e8).toFixed(8)) + " " + Config.COIN_NAME +
+            "\n\nIf the network says it isn't ready yet, try again in about an hour.",
+            [
+                { text: "Cancel", style: "cancel" },
+                { text: "Redeem", onPress: () => pushPasswordGate(3, timestamp, () => this.doRedeem(address, fee)) }
+            ],
+            { cancelable: false }
+        );
+    };
+
+    doRedeem = async (address, fee) => {
+        const { setWalletValues, timestamp } = this.props;
+        const say = (message) => Alert.alert("Time locks", message);
+
+        this.setState({ redeemingAddress: address });
+
+        try {
+            const wallet = this.props.wallet[timestamp];
+            const lock = (wallet.locks || {})[address];
+            const entry = wallet.addresses && wallet.addresses[wallet.receiveAddress];
+
+            if (!lock || !entry || !entry.privateKey) return say("This wallet has no key to redeem with.");
+
+            // fresh list of the coins at the lock address
+            let utxos;
+            try {
+                utxos = await getLockUtxos(address);
+            } catch (e) {
+                return say("Couldn't load the locked coins. Check your connection and try again.");
+            }
+
+            let built;
+            try {
+                built = buildLockRedeemTransaction({
+                    wif: entry.privateKey,
+                    address,
+                    unlockTime: lock.unlockTime,
+                    utxos,
+                    toAddress: wallet.receiveAddress,
+                    fee,
+                    nowSec: Math.floor(Date.now() / 1000)
+                });
+            } catch (e) {
+                return say(e.message || "Couldn't prepare the redeem transaction.");
+            }
+
+            const res = await broadcastRawTransaction(built.hex);
+            if (res.error) return say(friendlyBroadcastError(res.error));
+
+            // remember it, so Redeem isn't offered again while the transaction confirms
+            const current = this.props.wallet[timestamp].locks || {};
+            setWalletValues({
+                locks: { ...current, [address]: { ...current[address], redeeming: { txid: res.tx, at: Date.now() } } },
+                timestamp
+            });
+
+            this.addLocalPendingTx(res.tx, built.amount, built.fee, 0, address, wallet.receiveAddress);
+
+            say(
+                "Redeeming " + numberWithCommas((built.amount / 1e8).toFixed(8)) + " " + Config.COIN_NAME + " to your wallet." +
+                "\n\nTXID: " + shortenMiddle(res.tx, 10, 10) +
+                "\n\nIt will count as available once the transaction confirms."
+            );
+
+            this.lastLockCheck = 0;
+            this.refreshLocks(true);
+        } finally {
+            if (!this.unmounted) this.setState({ redeemingAddress: null });
+        }
+    };
+
+    // ---- create a new time lock from this wallet's available coins ----
+    confirmCreateLock = async () => {
+        const { timestamp } = this.props;
+        const wallet = this.props.wallet[timestamp];
+        const say = (message) => Alert.alert("Time locks", message);
+
+        if (this.state.creatingLock) return;
+
+        const pubkey = getWalletLockPubkey(wallet);
+        if (!pubkey) return say("This wallet has no key to lock coins with.");
+
+        const text = String(this.state.lockAmount || "").trim().replace(",", ".");
+        if (!/^\d*\.?\d{0,8}$/.test(text) || !(parseFloat(text) > 0)) {
+            return say("Enter how many " + Config.COIN_NAME + " to lock, for example 5 or 0.25.");
+        }
+
+        const sats = Math.round(parseFloat(text) * 1e8);
+        const fee = await getDefaultFeeSats();
+
+        // smaller locks could cost about as much to redeem as they are worth
+        const minimum = Math.max(fee * 5, 50000);
+        if (sats < minimum) {
+            return say("The minimum lock is " + numberWithCommas((minimum / 1e8).toFixed(8)) + " " + Config.COIN_NAME + ".");
+        }
+
+        const available = Math.round(((wallet.balance && wallet.balance.confirmed) || 0) * 1e8);
+        if (sats + fee > available) {
+            const most = Math.max(0, available - fee);
+            return say("You can lock at most " + numberWithCommas((most / 1e8).toFixed(8)) + " " + Config.COIN_NAME + " (your available coins minus the network fee).");
+        }
+
+        const days = this.state.lockDays;
+        const unlockTime = Math.floor(Date.now() / 1000) + days * 86400;
+        const address = lockAddress(unlockTime, pubkey);
+
+        Alert.alert(
+            "Lock coins",
+            "Lock " + numberWithCommas((sats / 1e8).toFixed(8)) + " " + Config.COIN_NAME + " for " + days + " days?" +
+            "\n\nThey cannot be spent or moved until " + moment.unix(unlockTime).format("DD MMM YYYY HH:mm") + "." +
+            "\n\nNetwork fee: " + numberWithCommas((fee / 1e8).toFixed(8)) + " " + Config.COIN_NAME,
+            [
+                { text: "Cancel", style: "cancel" },
+                {
+                    text: "Lock coins",
+                    onPress: () => pushPasswordGate(3, timestamp, () => this.doCreateLock(sats, fee, unlockTime, address, pubkey))
+                }
+            ],
+            { cancelable: false }
+        );
+    };
+
+    doCreateLock = async (sats, fee, unlockTime, address, pubkey) => {
+        const { setWalletValues, timestamp } = this.props;
+        const say = (message) => Alert.alert("Time locks", message);
+
+        this.setState({ creatingLock: true });
+
+        try {
+            const wallet = this.props.wallet[timestamp];
+
+            // Save the unlock time BEFORE sending: once the coins are locked it can't be read back from the chain.
+            setWalletValues({
+                locks: { ...(wallet.locks || {}), [address]: { address, unlockTime, pubkey, balance: 0, appCreated: true } },
+                timestamp
+            });
+
+            // Funding a lock is a normal send to the lock address
+            let res;
+            try {
+                res = await sendTransaction(global.socketConnect, wallet.addresses, wallet.receiveAddress, address, sats, fee);
+            } catch (e) {
+                res = { error: (e && e.message) || "Broadcast failed" };
+            }
+
+            if (!res || res.error) {
+                const error = res && res.error;
+
+                // "Broadcast failed" means we don't know whether the network got it: keep the saved lock then.
+                // Any other error means nothing was sent, so forget the lock.
+                if (error !== "Broadcast failed") {
+                    const current = { ...(this.props.wallet[timestamp].locks || {}) };
+                    delete current[address];
+                    setWalletValues({ locks: current, timestamp });
+                }
+
+                return say(
+                    error === "Insufficient funds"
+                        ? "Not enough available coins to lock that amount plus the network fee."
+                        : error === "Broadcast failed"
+                            ? "Couldn't confirm that the lock was sent (network problem). Check your transactions in a minute before trying again."
+                            : "Couldn't create the lock: " + friendlyBroadcastError(error)
+                );
+            }
+
+            this.addLocalPendingTx(res.tx, sats + fee, fee, 1, wallet.receiveAddress, address, [{ address, value: sats }]);
+
+            this.setState({ lockAmount: "" });
+
+            say(
+                "Locked " + numberWithCommas((sats / 1e8).toFixed(8)) + " " + Config.COIN_NAME +
+                " until " + moment.unix(unlockTime).format("DD MMM YYYY HH:mm") + "." +
+                "\n\nTXID: " + shortenMiddle(res.tx, 10, 10) +
+                "\n\nIt will show under Locked coins once the transaction confirms."
+            );
+
+            this.lastLockCheck = 0;
+        } finally {
+            if (!this.unmounted) this.setState({ creatingLock: false });
+        }
+    };
+
     // Total / locked / available, shown when the wallet has locked coins
     renderBalanceBreakdown = (summary, available, nowSec) => {
         const { usdValue } = this.state;
@@ -336,7 +568,7 @@ class WalletScreen extends PureComponent {
                 {summary.readySats > 0 && (
                     <TouchableOpacity onPress={() => this.setState({ showLocks: true })}>
                         <View style={row}>
-                            <Text style={{ color: 'white', opacity: 0.9, fontSize: 14 }}>Unlocked (redeem in web wallet)</Text>
+                            <Text style={{ color: 'white', opacity: 0.9, fontSize: 14 }}>Unlocked (ready to redeem)</Text>
                             <Text style={{ color: '#71b888', fontSize: 14, fontWeight: 'bold' }}>{amount(readyCoins)}</Text>
                         </View>
                     </TouchableOpacity>
@@ -385,7 +617,7 @@ class WalletScreen extends PureComponent {
                             <Text style={{ fontSize: 16, fontWeight: 'bold', color: 'black' }}>{amount(lock.balance)}</Text>
                             <Text style={{ color: lock.unlocked ? '#3f9b62' : '#c98a1b', fontWeight: 'bold', marginTop: 2 }}>
                                 {lock.unlocked
-                                    ? "Unlocked — redeem it in the web wallet"
+                                    ? "Unlocked — ready to redeem"
                                     : "Locked — " + formatLockRemaining(lock.unlockTime - nowSec) + " left"}
                             </Text>
                             <Text style={{ color: '#555', fontSize: 12, marginTop: 2 }}>
@@ -394,10 +626,66 @@ class WalletScreen extends PureComponent {
                             <Text style={{ color: '#888', fontSize: 12 }}>
                                 {lock.address.slice(0, 10) + "…" + lock.address.slice(-6)}
                             </Text>
+                            {lock.unlocked && (
+                                lock.redeeming && Date.now() - lock.redeeming.at < 20 * 60 * 1000
+                                    ? <Text style={{ color: '#555', fontSize: 12, marginTop: 8 }}>
+                                        Redeem transaction sent. Waiting for it to confirm…
+                                    </Text>
+                                    : <Button
+                                        title="Redeem to my wallet"
+                                        loading={this.state.redeemingAddress === lock.address}
+                                        disabled={!!this.state.redeemingAddress}
+                                        containerStyle={{ marginTop: 10 }}
+                                        buttonStyle={{ backgroundColor: '#3f9b62' }}
+                                        onPress={() => this.confirmRedeem(lock.address)}
+                                    />
+                            )}
                         </View>
                     ))}
 
-                    <Text style={{ fontSize: 15, fontWeight: 'bold', color: 'black', marginTop: 15 }}>Add a lock manually</Text>
+                    <Text style={{ fontSize: 15, fontWeight: 'bold', color: 'black', marginTop: 15 }}>Lock coins</Text>
+                    <Text style={{ fontSize: 12, color: '#555', marginBottom: 5 }}>
+                        Lock some of your available coins until a date you choose. They can't be spent or moved until then.
+                    </Text>
+                    <Input
+                        placeholder={"Amount in " + Config.COIN_NAME}
+                        value={this.state.lockAmount}
+                        keyboardType="decimal-pad"
+                        autoCorrect={false}
+                        renderErrorMessage={false}
+                        containerStyle={{ paddingHorizontal: 0 }}
+                        inputStyle={{ fontSize: 15, color: 'black' }}
+                        onChangeText={(lockAmount) => this.setState({ lockAmount })}
+                    />
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 10 }}>
+                        {[30, 60, 90, 180, 365].map((days) => (
+                            <TouchableOpacity
+                                key={days}
+                                onPress={() => this.setState({ lockDays: days })}
+                                style={{
+                                    flex: 1, marginHorizontal: 2, paddingVertical: 8, borderRadius: 6, alignItems: 'center',
+                                    backgroundColor: this.state.lockDays === days ? '#202225' : '#f0eff5'
+                                }}
+                            >
+                                <Text style={{ fontSize: 13, fontWeight: 'bold', color: this.state.lockDays === days ? 'white' : '#202225' }}>
+                                    {days + "d"}
+                                </Text>
+                            </TouchableOpacity>
+                        ))}
+                    </View>
+                    <Text style={{ fontSize: 12, color: '#555', marginTop: 6 }}>
+                        {"Unlocks about " + moment.unix(nowSec + this.state.lockDays * 86400).format("DD MMM YYYY HH:mm")}
+                    </Text>
+                    <Button
+                        title="Lock coins"
+                        loading={this.state.creatingLock}
+                        disabled={this.state.creatingLock}
+                        containerStyle={{ marginTop: 10 }}
+                        buttonStyle={{ backgroundColor: '#202225' }}
+                        onPress={this.confirmCreateLock}
+                    />
+
+                    <Text style={{ fontSize: 15, fontWeight: 'bold', color: 'black', marginTop: 25 }}>Add a lock manually</Text>
                     <Text style={{ fontSize: 12, color: '#555', marginBottom: 5 }}>
                         Locks made from this wallet's seed are found automatically. If one is missing, enter its unlock time from the
                         web wallet: unix seconds, or YYYY-MM-DD HH:mm.

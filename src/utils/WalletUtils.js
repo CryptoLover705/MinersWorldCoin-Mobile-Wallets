@@ -1355,3 +1355,161 @@ export function parseUnlockInput(text) {
 
 	return m[6] !== undefined ? { exact: t } : { from: t, to: t + 59 };
 }
+
+
+// ===================== Redeeming and creating time locks =====================
+
+const LOCK_SEQUENCE = 0xfffffffe; // anything below 0xffffffff keeps nLockTime (and so the lock) enforced
+const DUST_SATS = 546;
+
+// Push of a byte string inside a scriptSig (signatures and the lock script are both < 76 bytes)
+function pushData(bytes) {
+	if (bytes.length < 76) return Buffer.concat([Buffer.from([bytes.length]), bytes]);
+	if (bytes.length <= 0xff) return Buffer.concat([Buffer.from([0x4c, bytes.length]), bytes]);
+
+	throw new Error("Pushdata too large for a lock scriptSig");
+}
+
+// Confirmed coins sitting at a lock address. Throws on network failure.
+export async function getLockUtxos(address) {
+	const res = await axios.get(`${API}/unspent/${address}`);
+
+	return Array.isArray(res?.data?.result) ? res.data.result : [];
+}
+
+// Same default fee the Send screen starts with: the network's feerate if available, else 0.0001 MWC.
+export async function getDefaultFeeSats() {
+	try {
+		const res = await global.socketConnect.get_general_fee();
+		const feerate = Number(res && res.feerate);
+
+		if (feerate > 0) return Math.round(feerate);
+	} catch (e) {}
+
+	return 10000;
+}
+
+// Builds and signs the transaction that moves a matured lock back to `toAddress`.
+// Mirrors the web wallet's redeemLock(): every coin at the lock address is an input
+// (sequence 0xfffffffe), one output (total - fee), locktime = the unlock time, and each
+// input's scriptSig is <signature> <redeemScript>. Throws a readable Error if anything
+// doesn't check out, BEFORE anything is signed.
+export function buildLockRedeemTransaction({ wif, address, unlockTime, utxos, toAddress, fee, nowSec }) {
+	if (!(unlockTime >= CLTV_TIME_THRESHOLD)) {
+		throw new Error("Only time-based locks can be redeemed here.");
+	}
+
+	if (!(nowSec >= unlockTime)) {
+		throw new Error("This lock has not reached its unlock time yet.");
+	}
+
+	if (!Number.isSafeInteger(fee) || fee < 0) {
+		throw new Error("Invalid network fee.");
+	}
+
+	const keyPair = bitcoin.ECPair.fromWIF(wif, mwc);
+	const pubkeyHex = keyPair.publicKey.toString('hex');
+
+	// the lock must really be this wallet's lock
+	if (lockAddress(unlockTime, pubkeyHex) !== address) {
+		throw new Error("This lock does not belong to this wallet's key.");
+	}
+
+	const redeemScript = lockRedeemScript(unlockTime, pubkeyHex);
+	const lockOutput = Buffer.concat([Buffer.from([0xa9, 0x14]), bitcoin.crypto.hash160(redeemScript), Buffer.from([0x87])]);
+
+	// every coin once, and only coins that really sit in this lock
+	const seen = new Set();
+	const coins = [];
+
+	for (const u of utxos || []) {
+		const value = Number(u.value);
+		const index = Number(u.index);
+
+		if (!/^[0-9a-fA-F]{64}$/.test(String(u.txid)) || !Number.isInteger(index) || index < 0 || !(value > 0)) {
+			throw new Error("Unexpected data for the locked coins. Refresh and try again.");
+		}
+
+		if (u.script && String(u.script).toLowerCase() !== lockOutput.toString('hex')) {
+			throw new Error("A coin at this lock address has an unexpected script.");
+		}
+
+		const key = u.txid + ":" + index;
+		if (seen.has(key)) continue;
+		seen.add(key);
+
+		coins.push({ txid: u.txid, index, value });
+	}
+
+	if (coins.length === 0) {
+		throw new Error("There are no coins to redeem at this lock address right now.");
+	}
+
+	const total = coins.reduce((sum, c) => sum + c.value, 0);
+	const outValue = total - fee;
+
+	if (outValue < DUST_SATS) {
+		throw new Error("The locked amount is too small to cover the network fee.");
+	}
+
+	const txb = new bitcoin.TransactionBuilder(mwc);
+	txb.setLockTime(unlockTime);
+
+	for (const c of coins) {
+		txb.addInput(c.txid, c.index, LOCK_SEQUENCE);
+	}
+
+	txb.addOutput(toAddress, outValue);
+
+	const tx = txb.buildIncomplete();
+
+	coins.forEach((c, i) => {
+		const sigHash = tx.hashForSignature(i, redeemScript, bitcoin.Transaction.SIGHASH_ALL);
+		const derSig = bitcoin.script.signature.encode(keyPair.sign(sigHash), bitcoin.Transaction.SIGHASH_ALL);
+
+		tx.setInputScript(i, Buffer.concat([pushData(derSig), pushData(redeemScript)]));
+	});
+
+	return { hex: tx.toHex(), txid: tx.getId(), amount: outValue, fee, inputs: coins.length };
+}
+
+// Broadcast a raw transaction (same request the Send screen makes).
+// Returns { tx: txid } or { error: message }.
+export async function broadcastRawTransaction(txHex) {
+	try {
+		const res = await axios.post(`${API}/broadcast`, qs.stringify({ raw: txHex }), {
+			headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+		});
+
+		const data = res.data;
+
+		if (!data || data.error || !data.result) {
+			return { error: (data && data.error && (data.error.message || String(data.error))) || "Broadcast failed" };
+		}
+
+		return { tx: data.result };
+	} catch (e) {
+		const detail = e && e.response && e.response.data && e.response.data.error;
+
+		return { error: (detail && (detail.message || String(detail))) || (e && e.message) || "Broadcast failed" };
+	}
+}
+
+// Plain-language version of a broadcast rejection.
+export function friendlyBroadcastError(message) {
+	const m = String(message || "");
+
+	if (/non-?final|locktime|lock time/i.test(m)) {
+		return "The network doesn't accept this yet. Its clock runs about an hour behind real time, so try again in a little while.";
+	}
+
+	if (/missing ?inputs|already|conflict|spent|bad-txns-inputs/i.test(m)) {
+		return "These coins were already spent, or a transaction spending them is already waiting to confirm.";
+	}
+
+	if (/fee|relay/i.test(m)) {
+		return "The network rejected the transaction fee (" + m + "). Please try again.";
+	}
+
+	return m || "The transaction could not be sent.";
+}
