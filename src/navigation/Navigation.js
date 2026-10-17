@@ -138,7 +138,8 @@ export function pushPasswordGate(type, timestamp, callback = null) {
                 }]
             }
         });
-    } else if (type == 2) {
+    } else if (type == 2 || type == 3) {
+        // 2 = verify old-wallet password (migration), 3 = verify PIN then run callback
         Navigation.showModal({
             stack: {
                 children: [{

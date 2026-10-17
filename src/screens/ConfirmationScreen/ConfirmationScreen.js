@@ -7,18 +7,22 @@ import {
   View,
   Alert,
   Image,
+  Clipboard,
+  Linking,
+  TouchableOpacity,
 } from 'react-native';
 import {
   Text,
   Button,
   Divider,
+  Icon,
 } from 'react-native-elements';
 import AppLink from 'react-native-app-link';
 import { Navigation } from 'react-native-navigation';
 import { responsiveHeight, responsiveWidth, responsiveFontSize } from 'react-native-responsive-dimensions';
 import { connectWallet } from 'src/redux';
-import { sendTransaction, numberWithCommas } from 'src/utils/WalletUtils';
-import { pushPasswordGate } from 'src/navigation';
+import { sendTransaction, numberWithCommas, mergeTransactions, shortenMiddle, explorerTxUrl } from 'src/utils/WalletUtils';
+import { pushPasswordGate, ADD_ADDRESS_SCREEN } from 'src/navigation';
 import Config from 'react-native-config';
 import moment from "moment";
 
@@ -70,7 +74,9 @@ class ConfirmationScreen extends PureComponent {
     super(props);
 
     this.state = {
-      isLoading: false
+      isLoading: false,
+      sentResult: null,
+      copiedTxid: false
     }
 
     Navigation.mergeOptions(this.props.componentId, {
@@ -122,10 +128,53 @@ class ConfirmationScreen extends PureComponent {
     this.cancel();
   }
 
+  // Sending funds needs the PIN (or biometrics) first
+  requirePin = () => {
+    const { timestamp } = this.props;
+
+    if (this.state.isLoading || this.sending) return;
+
+    pushPasswordGate(3, timestamp, () => this.confirm());
+  }
+
+  // Put the transaction in the wallet right away as "Pending" (replaced by the real one on confirm)
+  addPendingTransaction = (hash, amountSats, feeSats) => {
+    try {
+      const { updateWalletValues, address, timestamp } = this.props;
+      const { receiveAddress, transactions } = this.props.wallet[timestamp];
+      const now = Math.floor(Date.now() / 1000);
+
+      const pending = {
+        hash: hash,
+        confirmations: 0,
+        // same convention as confirmed sends: amount includes the fee
+        amount: Math.round(amountSats + feeSats),
+        fee: Math.round(feeSats),
+        lock: {},
+        time: now,
+        date: null,
+        type: 1,
+        from: receiveAddress,
+        to: address
+      };
+
+      updateWalletValues({
+        transactions: mergeTransactions(transactions || {}, { [now + hash]: pending }),
+        timestamp
+      });
+    } catch (e) {
+      console.log("could not add pending transaction", e);
+    }
+  }
+
   confirm = async () => {
     var { setWalletValues, amount, address, fee, from, timelock, timestamp } = this.props;
     const { addresses, receiveAddress } = this.props.wallet[timestamp];
     let tx;
+
+    // ignore double taps while a send is already in progress
+    if (this.sending) return;
+    this.sending = true;
 
     this.setState({isLoading: true});
 
@@ -139,24 +188,23 @@ class ConfirmationScreen extends PureComponent {
       tx = await sendTransaction(global.socketConnect, addresses, receiveAddress, address, amount, fee, timelock);
       console.log(tx);
     } catch (e) {
-      tx = null;
-      this.setState({isLoading: false});
+      console.log(e);
+      tx = { error: (e && e.message) ? e.message : "Could not send the transaction" };
     }
 
+    this.sending = false;
     this.setState({isLoading: false});
 
-    if(tx !== undefined && !("error" in tx)) {
-      Alert.alert(
-          global.strings['send.title'],
-          global.strings['send.successAlert'],
-          [
-            {
-              text: global.strings['send.confirmAlertButton'],
-              onPress: () => this.success(tx.tx),
-            },
-          ],
-          {cancelable: false},
-        );
+    if (!tx || typeof tx !== 'object') {
+      tx = { error: "No response from the network" };
+    }
+
+    if(!("error" in tx)) {
+      // show it in the wallet straight away (amount/fee here are already in satoshis)
+      this.addPendingTransaction(tx.tx, amount, fee);
+
+      // tappable result card (see renderSentResult) instead of a plain Alert
+      this.setState({ sentResult: { txid: tx.tx } });
     } else {
       Alert.alert(
           global.strings['send.title'],
@@ -170,6 +218,118 @@ class ConfirmationScreen extends PureComponent {
           {cancelable: false},
         );
     }
+  }
+
+  // ---- sent result card actions ----
+  addToAddressBook = () => {
+    const { address, timestamp } = this.props;
+
+    Navigation.showModal({
+      stack: {
+        children: [{
+          component: {
+            name: ADD_ADDRESS_SCREEN,
+            passProps: { address, timestamp },
+          }
+        }]
+      }
+    });
+  }
+
+  openExplorer = async () => {
+    const { txid } = this.state.sentResult || {};
+
+    if (!txid) return;
+
+    const url = explorerTxUrl(txid);
+
+    try {
+      await Linking.openURL(url);
+    } catch (e) {
+      Alert.alert("Explorer", "Couldn't open the blockchain explorer.\n\n" + url);
+    }
+  }
+
+  copyTxid = () => {
+    const { txid } = this.state.sentResult || {};
+
+    if (!txid) return;
+
+    Clipboard.setString(txid);
+    this.setState({ copiedTxid: true });
+    setTimeout(() => this.setState({ copiedTxid: false }), 2000);
+  }
+
+  finish = () => {
+    const { txid } = this.state.sentResult || {};
+
+    this.success(txid);
+  }
+
+  renderSentResult = () => {
+    const { address, amount, timestamp } = this.props;
+    const { txid } = this.state.sentResult;
+
+    const addressBook = (this.props.wallet[timestamp] && this.props.wallet[timestamp].addressBook) || [];
+    const saved = addressBook.find((a) => a.address === address);
+
+    const linkStyle = { color: '#8ab4ff', fontWeight: 'bold', textDecorationLine: 'underline' };
+
+    return (
+      <View style={[StyleSheet.absoluteFillObject, { backgroundColor: '#202225', alignItems: 'center', justifyContent: 'center', padding: 20 }]}>
+        <Icon name="check-circle" type="font-awesome" color="#71b888" size={64} />
+
+        <Text style={{ fontSize: 22, fontWeight: 'bold', color: 'white', marginTop: 15 }}>
+          {global.strings['send.title']}
+        </Text>
+
+        <Text style={{ fontSize: 15, color: 'white', textAlign: 'center', marginTop: 15, lineHeight: 24 }}>
+          {"Transaction for "}
+          <Text style={{ fontWeight: 'bold', color: 'white' }}>{amount} {Config.COIN_NAME}</Text>
+          {" has been sent to "}
+          {saved
+            ? <Text style={{ fontWeight: 'bold', color: 'white' }}>{saved.name} ({shortenMiddle(address, 6, 6)})</Text>
+            : <Text style={linkStyle} onPress={this.addToAddressBook}>{shortenMiddle(address, 10, 8)}</Text>
+          }
+          {" with the txid of "}
+          <Text style={linkStyle} onPress={this.openExplorer}>{shortenMiddle(txid, 8, 8)}</Text>
+          {"."}
+        </Text>
+
+        <Text style={{ fontSize: 12, color: '#b9bbbe', textAlign: 'center', marginTop: 10 }}>
+          {saved
+            ? "This address is in your address book."
+            : "Tap the address to save it to your address book."}
+          {"  Tap the txid to view it on the explorer."}
+        </Text>
+
+        <View style={{ flexDirection: 'row', marginTop: 20 }}>
+          <Button
+            icon={{ name: this.state.copiedTxid ? "check" : "copy", size: 14, type: 'font-awesome', color: "white" }}
+            title={this.state.copiedTxid ? "Copied" : (global.strings['send.copyTxidButton'] || "Copy TXID")}
+            type="clear"
+            titleStyle={styles.buttonTitleOut}
+            onPress={this.copyTxid}
+          />
+          {!saved && <Button
+            icon={{ name: "user-plus", size: 14, type: 'font-awesome', color: "white" }}
+            title="Save address"
+            type="clear"
+            titleStyle={styles.buttonTitleOut}
+            onPress={this.addToAddressBook}
+          />}
+        </View>
+
+        <Button
+          icon={{ name: "check-circle", size: 14, type: 'font-awesome', color: "white" }}
+          title={global.strings['send.confirmAlertButton']}
+          containerStyle={{ width: "90%", justifyContent: 'center', marginTop: 20 }}
+          buttonStyle={styles.buttonIn}
+          titleStyle={styles.buttonTitleIn}
+          onPress={this.finish}
+        />
+      </View>
+    );
   }
 
   cancel = async () => {
@@ -238,7 +398,7 @@ class ConfirmationScreen extends PureComponent {
               containerStyle={{width: "90%", justifyContent: 'center'}}
               buttonStyle={styles.buttonIn}
               titleStyle={styles.buttonTitleIn}
-              onPress={() => this.confirm()}
+              onPress={() => this.requirePin()}
               loading={this.state.isLoading}
             />
             <Button
@@ -254,6 +414,7 @@ class ConfirmationScreen extends PureComponent {
               onPress={() => this.cancel()}
             />
           </View>
+          {this.state.sentResult && this.renderSentResult()}
         </View>
     );
   }

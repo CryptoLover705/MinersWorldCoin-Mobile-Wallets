@@ -97,7 +97,13 @@ class AddAddressScreen extends PureComponent {
         add = async () => {
                 const { setWalletValues, timestamp } = this.props;
                 var { addressBook } = this.props.wallet[timestamp];
-                const { name, address } = this.state;
+                const name = this.state.name.trim();
+                const address = this.state.address.trim();
+
+                // editing an existing entry (opened from the address info screen)
+                if (this.props.editing) {
+                    return this.saveEdit(name, address);
+                }
 
                 if (name.length > 2 && isAddress(address)) {
 
@@ -133,8 +139,7 @@ class AddAddressScreen extends PureComponent {
                                  }
                      }
 
-                     addressBook.push({name: name, address: address});
-                     setWalletValues({addressBook: addressBook, timestamp: timestamp});
+                     setWalletValues({addressBook: [...addressBook, {name: name, address: address}], timestamp: timestamp});
 
                      Alert.alert(
                 global.strings["addAddress.title"],
@@ -175,6 +180,34 @@ class AddAddressScreen extends PureComponent {
                 }
         }
 
+        saveEdit = (name, address) => {
+            const { setWalletValues, timestamp, editing } = this.props;
+            const { addressBook } = this.props.wallet[timestamp];
+
+            const warn = (key) => Alert.alert(
+                global.strings["addAddress.title"],
+                global.strings[key],
+                [{ text: global.strings["addAddress.confirmAlertButton"] }],
+                {cancelable: false},
+            );
+
+            if (!(name.length > 2)) return warn("addAddress.incorrectNameAlert");
+            if (!isAddress(address)) return warn("addAddress.incorrectAddressAlert");
+
+            // duplicates only matter against the OTHER entries
+            const others = addressBook.filter((a) => a.address !== editing.address);
+
+            if (others.some((a) => a.name === name)) return warn("addAddress.existNameAlert");
+            if (others.some((a) => a.address === address)) return warn("addAddress.existAddressAlert");
+
+            setWalletValues({
+                addressBook: addressBook.map((a) => a.address === editing.address ? { ...a, name, address } : a),
+                timestamp: timestamp
+            });
+
+            this.cancel();
+        }
+
      cancel = async () => {
          Navigation.dismissModal(this.props.componentId);
      }
@@ -189,7 +222,7 @@ class AddAddressScreen extends PureComponent {
                         source={require('assets/icons/logo.png')}
                     />
                     <Text style={{fontSize: 20, marginTop: 10, fontWeight: 'bold', color: 'white'}}>
-                        {global.strings["addAddress.title"]}
+                        {this.props.editing ? "Edit address" : global.strings["addAddress.title"]}
                     </Text>
                     <Text style={{fontSize: 14, color: "white", opacity: 0.9, textAlign: 'center', marginTop: 10, width: '85%'}}>
                         {global.strings["addAddress.subtitle"]}
@@ -230,7 +263,7 @@ class AddAddressScreen extends PureComponent {
                                             type: 'font-awesome',
                                             color: "white" }}
 
-                            title={global.strings["addAddress.addButton"]}
+                            title={this.props.editing ? "Save changes" : global.strings["addAddress.addButton"]}
                             containerStyle={{width: "90%", justifyContent: 'center'}}
                             buttonStyle={styles.buttonIn}
                             titleStyle={styles.buttonTitleIn}

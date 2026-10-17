@@ -7,7 +7,8 @@ import {
     View,
     Image,
     ActivityIndicator,
-    AppState
+    AppState,
+    Alert
 } from 'react-native';
 import {
     Text
@@ -15,7 +16,7 @@ import {
 import { pushWalletList } from 'src/navigation';
 import { Navigation } from 'react-native-navigation';
 import Config from 'react-native-config';
-import { findAddresses, generateAddresses, generateAddressesFromWIF, getBalance, getTransactionHistory } from 'src/utils/WalletUtils';
+import { discoverSeedAddresses, generateAddresses, generateAddressesFromWIF, getBalance, getTransactionHistory } from 'src/utils/WalletUtils';
 import { connectWallet, connectPassword } from 'src/redux';
 
 const styles = StyleSheet.create({
@@ -169,25 +170,29 @@ class GenerateWalletScreen extends PureComponent {
             timestamp
         });
 
-        // ONLY for seed wallets
+        // ONLY for imported seed wallets: find every address tied to the seed
         if (genarateType && seedPhrase && seedPhrase.length) {
-            const externalAddresses = await findAddresses(
-                global.socketConnect,
-                seedPhrase.join(" "),
-                Config.DERIVATION_PATH + "0"
-            );
+            try {
+                const found = await discoverSeedAddresses(
+                    seedPhrase.join(" "),
+                    Config.DERIVATION_PATH
+                );
 
-            const internalAddresses = await findAddresses(
-                global.socketConnect,
-                seedPhrase.join(" "),
-                Config.DERIVATION_PATH + "1"
-            );
-
-            if (Object.keys(externalAddresses).length || Object.keys(internalAddresses).length) {
-                await updateWalletValues({
-                    addresses: { ...externalAddresses, ...internalAddresses },
-                    timestamp
-                });
+                if (Object.keys(found).length) {
+                    // keep the default receive address in the list even if unused
+                    await updateWalletValues({
+                        addresses: { ...firstAddress, ...found },
+                        timestamp
+                    });
+                }
+            } catch (e) {
+                console.log("Address discovery failed:", e);
+                Alert.alert(
+                    "Import",
+                    "Couldn't finish scanning for this seed's addresses (network problem). " +
+                    "The wallet was added, but the balance may be incomplete. " +
+                    "Check your connection and import it again."
+                );
             }
         }
 

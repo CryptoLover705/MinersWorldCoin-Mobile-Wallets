@@ -220,7 +220,7 @@ export function isAddress(address) {
 
 export function isValidWIF(wif) {
     try {
-        ECPair.fromWIF(wif, mwc);
+        bitcoin.ECPair.fromWIF(wif, mwc);
         return true;
     } catch (e) {
         return false;
@@ -264,6 +264,20 @@ export function importAddressByWIF(wif) {
     }
 }
 
+// Builds an address list (same shape as generateAddresses) from a single WIF key.
+// bech32 is first so it becomes the default receive address, like seed wallets.
+export function generateAddressesFromWIF(wif) {
+    const derived = importAddressByWIF(wif);
+    if (!derived) return {};
+
+    const list = {};
+    if (derived.bech32) list[derived.bech32] = { index: 0, privateKey: wif, type: ADDRESS_TYPES.BECH32 };
+    if (derived.segwit) list[derived.segwit] = { index: 0, privateKey: wif, type: ADDRESS_TYPES.SEGWIT };
+    if (derived.legacy) list[derived.legacy] = { index: 0, privateKey: wif, type: ADDRESS_TYPES.LEGACY };
+
+    return list;
+}
+
 export function deriveAddressFromWIF(wif, type = ADDRESS_TYPES.LEGACY) {
     if (!isValidWIF(wif)) return null;
 
@@ -280,24 +294,22 @@ export function getLanguageInfo(code) {
 	}
 }
 
+// Generates a standard BIP39 mnemonic (12 or 24 words) using a cryptographically
+// secure RNG (react-native-get-random-values is loaded first in index.js).
+// Includes the BIP39 checksum, so the phrase works in any BIP39 wallet.
 export function generateSeedPhrase(size = 12) {
-	const mnemonic = require('assets/mnemonics.json');
-	let seedPhrase = [];
-	let randomNumbers = [];
+    if (size !== 12 && size !== 24) {
+        throw new Error("Seed phrase size must be 12 or 24 words");
+    }
 
-	for (var i = 0; i < size; i++) {
-	  while (true) {
-	    let num = Math.floor(Math.random()*mnemonic.words.length);
+    const mnemonic = bip39.generateMnemonic(size === 24 ? 256 : 128);
 
-	    if (!randomNumbers.includes(num)) {
-	      randomNumbers.push(num);
-	      seedPhrase.push(mnemonic.words[num]);
-	      break;
-	    }
-	  }
-	}
+    // Never hand out a seed we can't validate (e.g. if the RNG were broken)
+    if (!bip39.validateMnemonic(mnemonic)) {
+        throw new Error("Failed to generate a valid seed phrase");
+    }
 
-	return seedPhrase;
+    return mnemonic.split(" ");
 }
 
 export function generateAddresses(
@@ -370,6 +382,65 @@ export async function findAddresses(socketConnect, seedPhrase, derivePath) {
     return findedAddressList;
 }
 
+// True if the address has ever been used (any tx history). Throws on network failure
+// so a flaky connection can't silently look like "no funds".
+async function addressIsUsed(address) {
+    let lastError;
+
+    for (let attempt = 0; attempt < 2; attempt++) {
+        try {
+            const res = await axios.get(`${API}/history/${address}`);
+            const tx = res?.data?.result?.tx;
+            return Array.isArray(tx) && tx.length > 0;
+        } catch (e) {
+            lastError = e;
+        }
+    }
+
+    throw lastError;
+}
+
+// Scans one derivation chain/type in batches of 20 until a whole batch is unused.
+export async function findAddressesREST(seedPhrase, derivePath, type = ADDRESS_TYPES.BECH32) {
+    const MAX_BATCHES = 15; // hard stop at 300 addresses per chain/type
+    let found = {};
+    let k = 0;
+
+    for (let batch = 0; batch < MAX_BATCHES; batch++) {
+        const candidates = generateAddresses(seedPhrase, derivePath, k, k + 19, type);
+        const addrs = Object.keys(candidates);
+
+        const used = await Promise.all(addrs.map(addressIsUsed));
+
+        let anyUsed = false;
+        addrs.forEach((addr, i) => {
+            if (used[i]) {
+                found[addr] = candidates[addr];
+                anyUsed = true;
+            }
+        });
+
+        if (!anyUsed) break;
+        k += 20;
+    }
+
+    return found;
+}
+
+// Finds every used address for a seed: external + change chains, all address types.
+export async function discoverSeedAddresses(seedPhrase, basePath) {
+    let all = {};
+
+    for (const chain of ["0", "1"]) {
+        for (const type of [ADDRESS_TYPES.BECH32, ADDRESS_TYPES.SEGWIT, ADDRESS_TYPES.LEGACY]) {
+            const found = await findAddressesREST(seedPhrase, basePath + chain, type);
+            all = { ...all, ...found };
+        }
+    }
+
+    return all;
+}
+
 export async function sendTransaction(
     socketConnect,
     walletAddresses,
@@ -382,6 +453,7 @@ export async function sendTransaction(
     let outputsAmount = 0;
     let keyPairs = [];
     let scripts = [];
+    const usedOutpoints = new Set();
 
     const txb = new bitcoin.TransactionBuilder(mwc);
     txb.setVersion(2);
@@ -402,6 +474,11 @@ export async function sendTransaction(
             for (let k = 0; k < utxo.length; k++) {
 
                 if (outputsAmount >= (amount + fee)) break;
+
+                // the same coin can come back under several address forms of one key: spend it once
+                const outpoint = `${utxo[k].txid}:${utxo[k].index}`;
+                if (usedOutpoints.has(outpoint)) continue;
+                usedOutpoints.add(outpoint);
 
                 const script = Buffer.from(utxo[k].script, 'hex');
                 const type = getScriptType(script);
@@ -644,6 +721,18 @@ export async function createTransactionObject(socketConnect, walletAddresses, tr
 		transaction.date = null;
 	}
 
+	// Outputs paid to P2SH addresses that are not ours: these can be time locks created
+	// with the web wallet (P2SH CLTV, addresses starting with "5"). See findLockUnlockTime.
+	transaction.p2shOutputs = [];
+	for (var k = 0; k < (transactionVerbose.vout || []).length; k++) {
+		const out = transactionVerbose.vout[k];
+		const outAddress = out && out.scriptPubKey && out.scriptPubKey.addresses && out.scriptPubKey.addresses[0];
+
+		if (outAddress && !(outAddress in walletAddresses) && isP2SHAddress(outAddress)) {
+			transaction.p2shOutputs.push({ address: outAddress, value: out.value });
+		}
+	}
+
 	return transaction;
 }
 
@@ -670,37 +759,157 @@ async function createTransactionsFromHistory(socketConnect, walletAddresses, his
 	return transactionHistory;
 }
 
-export async function getTransactionHistory(socketConnect, walletAddresses, transactions = null) {
-	let allTxids = [];
+// Every txid for an address: confirmed history + mempool (so pending txs show up)
+async function fetchAddressTxids(address) {
+	const ids = [];
 
-	for (let address in walletAddresses) {
-		try {
-			const res = await axios.get(`${API}/history/${address}`);
-			allTxids.push(...res.data.result.tx);
-		} catch (e) {
-			console.log("history error", e);
-		}
+	try {
+		const res = await axios.get(`${API}/history/${address}`);
+		ids.push(...(res?.data?.result?.tx || []));
+	} catch (e) {
+		console.log("history error", e);
 	}
 
-	// remove duplicates
-	allTxids = [...new Set(allTxids)];
+	try {
+		const res = await axios.get(`${API}/mempool/${address}`);
+		ids.push(...(res?.data?.result?.tx || []));
+	} catch (e) {
+		// mempool lookup is best-effort
+	}
 
+	return ids;
+}
+
+export async function getTransactionHistory(socketConnect, walletAddresses, transactions = null) {
+	const histories = await Promise.all(
+		Object.keys(walletAddresses).map(fetchAddressTxids)
+	);
+
+	// remove duplicates
+	const allTxids = [...new Set(histories.flat())];
+
+	// What we already know: skip txs that are final (6+ confirmations) so polling stays cheap,
+	// and keep the first-seen time of pending txs so their list entry doesn't jump around.
+	const finalHashes = new Set();
+	const knownTime = {};
+
+	Object.values(transactions || {}).forEach((t) => {
+		if (!t || !t.hash) return;
+		if (t.confirmations >= 6 && (t.type !== 1 || t.p2shOutputs !== undefined)) finalHashes.add(t.hash);
+		if (t.time) knownTime[t.hash] = t.time;
+	});
+
+	const nowSecs = Math.floor(Date.now() / 1000);
 	let txObjects = {};
 
 	await Promise.all(
-		allTxids.map(async (txid) => {
-			const tx = await getTransaction(txid);
-			if (!tx) return;
+		allTxids
+			.filter((txid) => !finalHashes.has(txid))
+			.map(async (txid) => {
+				const tx = await getTransaction(txid);
+				if (!tx) return;
 
-			const parsed = await createTransactionObject(null, walletAddresses, tx);
+				const parsed = await createTransactionObject(null, walletAddresses, tx);
 
-			if (parsed.time) {
+				// unconfirmed txs have no block time yet: don't drop them
+				parsed.time = parsed.time || knownTime[parsed.hash] || nowSecs;
+
 				txObjects[parsed.time + parsed.hash] = parsed;
-			}
-		})
+			})
 	);
 
 	return txObjects;
+}
+
+// Merge transaction maps by txid, so a pending tx is REPLACED (not duplicated) when it
+// confirms and its key (time + hash) changes. Optionally drops pending txs the network
+// no longer knows about (e.g. dropped from the mempool) after 2 hours.
+export function mergeTransactions(existing = {}, incoming = {}, options = {}) {
+	const incomingHashes = new Set(Object.values(incoming || {}).map((t) => t && t.hash));
+	const nowSecs = Math.floor(Date.now() / 1000);
+	const merged = {};
+
+	Object.keys(existing || {}).forEach((key) => {
+		const t = existing[key];
+		if (!t) return;
+		if (incomingHashes.has(t.hash)) return;
+
+		if (options.dropStalePending && !(t.confirmations > 0) && t.time && nowSecs - t.time > 7200) {
+			return;
+		}
+
+		merged[key] = t;
+	});
+
+	return { ...merged, ...incoming };
+}
+
+// Shorten a long string in the middle: "mwc1qabcd...wxyz1234"
+export function shortenMiddle(str, head = 8, tail = 8) {
+	if (!str) return "";
+	if (str.length <= head + tail + 1) return str;
+
+	return str.slice(0, head) + "…" + str.slice(-tail);
+}
+
+// Block explorer link for a transaction (EXPLORER_URL ends with "/", so strip it)
+export function explorerTxUrl(hash) {
+	const base = (Config.EXPLORER_URL || "").replace(/\/+$/, "");
+
+	return base + "/#/transaction/" + hash;
+}
+
+// Net effect of unconfirmed transactions on the balance, in satoshis (negative = outgoing).
+export function getPendingDelta(transactions = {}) {
+	return Object.values(transactions || {}).reduce((sum, t) => {
+		if (!t || t.confirmations > 0) return sum;
+
+		const amount = Number(t.amount) || 0;
+		return sum + (t.type ? -amount : amount);
+	}, 0);
+}
+
+// One key has several address forms (legacy "9...", segwit "5...", bech32 "mwc1...") and the API can
+// report the same coin under more than one of them. So any wallet holding more than one address
+// (imported seeds, imported private keys) must count coins by txid:index, never per address.
+export function shouldDedupeBalance(wallet) {
+	return !!wallet && (!!wallet.isImported || Object.keys(wallet.addresses || {}).length > 1);
+}
+
+// Wallet balance in satoshis that THROWS if any request fails, so background refreshes
+// can keep the last good balance instead of briefly showing a wrong (lower) one.
+export async function getWalletBalanceStrict(addresses, isImported = false) {
+	const addrs = Object.keys(addresses);
+
+	if (isImported) {
+		const lists = await Promise.all(
+			addrs.map(async (a) => {
+				const res = await axios.get(`${API}/unspent/${a}`);
+				return res?.data?.result || [];
+			})
+		);
+
+		const seen = new Set();
+		let total = 0;
+
+		lists.flat().forEach((u) => {
+			const key = `${u.txid}:${u.index}`;
+			if (seen.has(key)) return;
+			seen.add(key);
+			total += parseFloat(u.value) || 0;
+		});
+
+		return total;
+	}
+
+	const balances = await Promise.all(
+		addrs.map(async (a) => {
+			const res = await axios.get(`${API}/balance/${a}`);
+			return parseFloat(res?.data?.result?.balance ?? 0) || 0;
+		})
+	);
+
+	return balances.reduce((sum, b) => sum + b, 0);
 }
 
 export async function estimateFee(socketConnect, walletAddresses, options = {speed: "normal"}) {
@@ -924,4 +1133,388 @@ export async function checkMempool(socketConnect, walletAddresses, address, call
 	} catch (e) {
 		console.log('mempool error: ', e);
 	}
+}
+
+
+// ===================== Time locks (P2SH CLTV, created by the web wallet) =====================
+// A lock is a P2SH address (version byte 10, so it always starts with "5") wrapping
+//     <unlock-time> OP_CHECKLOCKTIMEVERIFY OP_DROP <33-byte pubkey> OP_CHECKSIG
+// The unlock time stays hidden on-chain until the coins are spent and the API cannot list locks,
+// so the wallet finds them itself: it takes the P2SH addresses it has sent coins to and tries
+// the unlock times the web wallet's presets would have produced (see findLockUnlockTime).
+
+export const LOCK_PRESET_DAYS = [30, 60, 90, 180, 365];
+const CLTV_TIME_THRESHOLD = 500000000; // below this a CLTV value is a block height, not a date
+
+export function isP2SHAddress(address) {
+	try {
+		return bitcoin.address.fromBase58Check(address).version === mwc.scriptHash;
+	} catch (e) {
+		return false;
+	}
+}
+
+// Public key (hex) the web wallet uses for this wallet: the first receive address,
+// m/44'/0'/0'/0/0 (or the imported private key for WIF wallets).
+export function getWalletLockPubkey(wallet) {
+	try {
+		const entry = wallet && wallet.addresses && wallet.addresses[wallet.receiveAddress];
+
+		if (!entry || !entry.privateKey) return null;
+
+		return bitcoin.ECPair.fromWIF(entry.privateKey, mwc).publicKey.toString('hex');
+	} catch (e) {
+		return null;
+	}
+}
+
+export function lockRedeemScript(unlockTime, pubkeyHex) {
+	const lockBytes = bitcoin.script.number.encode(unlockTime);
+
+	return Buffer.concat([
+		Buffer.from([lockBytes.length]),
+		lockBytes,
+		Buffer.from([0xb1, 0x75, 0x21]), // OP_CHECKLOCKTIMEVERIFY OP_DROP <push 33 bytes>
+		Buffer.from(pubkeyHex, 'hex'),
+		Buffer.from([0xac])              // OP_CHECKSIG
+	]);
+}
+
+export function lockAddress(unlockTime, pubkeyHex) {
+	return bitcoin.address.toBase58Check(
+		bitcoin.crypto.hash160(lockRedeemScript(unlockTime, pubkeyHex)),
+		mwc.scriptHash
+	);
+}
+
+// Tries every unlock time in the given ranges against the given lock addresses.
+// Returns { index, unlockTime } for the first match (index = position in `addresses`), else null.
+// Works in small slices so the UI stays responsive.
+async function searchLockTimes(pubkeyHex, addresses, ranges, shouldCancel) {
+	const pub = Buffer.from(pubkeyHex || "", 'hex');
+	if (pub.length !== 33) return null;
+
+	const targets = addresses.map((a) => {
+		try {
+			const d = bitcoin.address.fromBase58Check(a);
+			return d.version === mwc.scriptHash ? d.hash : null;
+		} catch (e) {
+			return null;
+		}
+	});
+
+	// Fast path: unlock times from 0x800000 to 0x7fffffff are always encoded in exactly 4 bytes,
+	// so the script is a fixed 42-byte template where only the 4 time bytes change.
+	const script = Buffer.alloc(42);
+	script[0] = 4;
+	script[5] = 0xb1;
+	script[6] = 0x75;
+	script[7] = 0x21;
+	pub.copy(script, 8);
+	script[41] = 0xac;
+
+	const SLICE_MS = 8; // work for ~8 ms at a time, then let taps and animations run
+	let sliceStart = Date.now();
+	let checked = 0;
+
+	for (const range of ranges) {
+		const from = Math.max(range.from, 0x800000);
+		const to = Math.min(range.to, 0x7fffffff);
+
+		for (let t = from; t <= to; t++) {
+			script[1] = t & 0xff;
+			script[2] = (t >>> 8) & 0xff;
+			script[3] = (t >>> 16) & 0xff;
+			script[4] = (t >>> 24) & 0xff;
+
+			const hash = bitcoin.crypto.hash160(script);
+
+			for (let i = 0; i < targets.length; i++) {
+				if (targets[i] && hash.equals(targets[i])) {
+					return { index: i, unlockTime: t };
+				}
+			}
+
+			if ((++checked & 7) === 0 && Date.now() - sliceStart >= SLICE_MS) {
+				await new Promise((resolve) => setTimeout(resolve, 6));
+				if (shouldCancel && shouldCancel()) return null;
+				sliceStart = Date.now();
+			}
+		}
+	}
+
+	return null;
+}
+
+// The web wallet sets the unlock time to (moment you pick a preset) + 30/60/90/180/365 days,
+// shortly before the lock is funded. So the unlock time lies just before
+// (funding time + preset days): look back 6 hours, with 10 minutes of clock slack.
+export async function findLockUnlockTime(pubkeyHex, address, fundTime, shouldCancel) {
+	const ranges = LOCK_PRESET_DAYS.map((days) => ({
+		from: fundTime + days * 86400 - 6 * 3600,
+		to: fundTime + days * 86400 + 600
+	}));
+
+	const hit = await searchLockTimes(pubkeyHex, [address], ranges, shouldCancel);
+
+	return hit ? hit.unlockTime : null;
+}
+
+// Manual lookup: which of `addresses` is the lock for an unlock time between from and to?
+export async function findLockInRange(pubkeyHex, addresses, from, to) {
+	return searchLockTimes(pubkeyHex, addresses, [{ from, to }]);
+}
+
+// Confirmed balance (satoshis) of a lock address. Throws on network failure.
+export async function getLockBalance(address) {
+	const res = await axios.get(`${API}/balance/${address}`);
+
+	return parseFloat(res?.data?.result?.balance ?? 0) || 0;
+}
+
+// P2SH outputs the wallet has sent coins to that might be locks (earliest funding time kept).
+export function collectLockCandidates(transactions, addresses) {
+	const own = addresses || {};
+	const found = {};
+	const nowSecs = Math.floor(Date.now() / 1000);
+
+	Object.values(transactions || {}).forEach((t) => {
+		if (!t || t.type !== 1 || !Array.isArray(t.p2shOutputs)) return;
+
+		t.p2shOutputs.forEach((o) => {
+			if (!o || !o.address || o.address in own) return;
+
+			const fundTime = t.time || nowSecs;
+
+			if (!found[o.address] || fundTime < found[o.address].fundTime) {
+				found[o.address] = { address: o.address, fundTime, txid: t.hash };
+			}
+		});
+	});
+
+	return Object.values(found);
+}
+
+// Split the known locks into still-locked and unlocked-but-not-yet-redeemed coins.
+export function summarizeLocks(locks, nowSec) {
+	const list = Object.values(locks || {})
+		.filter((l) => l && l.balance > 0)
+		.map((l) => ({ ...l, unlocked: l.unlockTime <= nowSec }))
+		.sort((a, b) => a.unlockTime - b.unlockTime);
+
+	const locked = list.filter((l) => !l.unlocked);
+	const ready = list.filter((l) => l.unlocked);
+	const sum = (arr) => arr.reduce((total, l) => total + l.balance, 0);
+
+	return {
+		list,
+		hasLocks: list.length > 0,
+		lockedSats: sum(locked),
+		readySats: sum(ready),
+		lockedCount: locked.length,
+		nextUnlock: locked.length ? locked[0].unlockTime : null
+	};
+}
+
+export function formatLockRemaining(secs) {
+	secs = Math.max(0, Math.floor(secs));
+
+	const d = Math.floor(secs / 86400);
+	const h = Math.floor((secs % 86400) / 3600);
+	const m = Math.floor((secs % 3600) / 60);
+
+	if (d > 0) return d + "d " + h + "h";
+	if (h > 0) return h + "h " + m + "m";
+	if (m > 0) return m + "m";
+
+	return secs > 0 ? "<1m" : "0m";
+}
+
+// Unlock time typed by the user: unix seconds, "YYYY-MM-DD HH:mm:ss" (exact) or
+// "YYYY-MM-DD HH:mm" (any second within that minute). Local time. Returns null if not understood.
+export function parseUnlockInput(text) {
+	const s = String(text || "").trim();
+
+	if (/^\d{9,10}$/.test(s)) {
+		const t = parseInt(s, 10);
+		return t >= CLTV_TIME_THRESHOLD ? { exact: t } : null;
+	}
+
+	const m = s.match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})(?::(\d{2}))?$/);
+	if (!m) return null;
+
+	const [y, mo, d, h, mi] = [+m[1], +m[2], +m[3], +m[4], +m[5]];
+	const sec = m[6] !== undefined ? +m[6] : 0;
+	const date = new Date(y, mo - 1, d, h, mi, sec);
+
+	// reject impossible dates such as 2026-02-31
+	if (date.getFullYear() !== y || date.getMonth() !== mo - 1 || date.getDate() !== d ||
+		date.getHours() !== h || date.getMinutes() !== mi) return null;
+
+	const t = Math.floor(date.getTime() / 1000);
+
+	if (t < CLTV_TIME_THRESHOLD) return null;
+
+	return m[6] !== undefined ? { exact: t } : { from: t, to: t + 59 };
+}
+
+
+// ===================== Redeeming and creating time locks =====================
+
+const LOCK_SEQUENCE = 0xfffffffe; // anything below 0xffffffff keeps nLockTime (and so the lock) enforced
+const DUST_SATS = 546;
+
+// Push of a byte string inside a scriptSig (signatures and the lock script are both < 76 bytes)
+function pushData(bytes) {
+	if (bytes.length < 76) return Buffer.concat([Buffer.from([bytes.length]), bytes]);
+	if (bytes.length <= 0xff) return Buffer.concat([Buffer.from([0x4c, bytes.length]), bytes]);
+
+	throw new Error("Pushdata too large for a lock scriptSig");
+}
+
+// Confirmed coins sitting at a lock address. Throws on network failure.
+export async function getLockUtxos(address) {
+	const res = await axios.get(`${API}/unspent/${address}`);
+
+	return Array.isArray(res?.data?.result) ? res.data.result : [];
+}
+
+// Same default fee the Send screen starts with: the network's feerate if available, else 0.0001 MWC.
+export async function getDefaultFeeSats() {
+	try {
+		const res = await Promise.race([
+			global.socketConnect.get_general_fee(),
+			new Promise((_, reject) => setTimeout(() => reject(new Error("fee lookup timed out")), 1500))
+		]);
+		const feerate = Number(res && res.feerate);
+
+		if (feerate > 0) return Math.round(feerate);
+	} catch (e) {}
+
+	return 10000;
+}
+
+// Builds and signs the transaction that moves a matured lock back to `toAddress`.
+// Mirrors the web wallet's redeemLock(): every coin at the lock address is an input
+// (sequence 0xfffffffe), one output (total - fee), locktime = the unlock time, and each
+// input's scriptSig is <signature> <redeemScript>. Throws a readable Error if anything
+// doesn't check out, BEFORE anything is signed.
+export function buildLockRedeemTransaction({ wif, address, unlockTime, utxos, toAddress, fee, nowSec }) {
+	if (!(unlockTime >= CLTV_TIME_THRESHOLD)) {
+		throw new Error("Only time-based locks can be redeemed here.");
+	}
+
+	if (!(nowSec >= unlockTime)) {
+		throw new Error("This lock has not reached its unlock time yet.");
+	}
+
+	if (!Number.isSafeInteger(fee) || fee < 0) {
+		throw new Error("Invalid network fee.");
+	}
+
+	const keyPair = bitcoin.ECPair.fromWIF(wif, mwc);
+	const pubkeyHex = keyPair.publicKey.toString('hex');
+
+	// the lock must really be this wallet's lock
+	if (lockAddress(unlockTime, pubkeyHex) !== address) {
+		throw new Error("This lock does not belong to this wallet's key.");
+	}
+
+	const redeemScript = lockRedeemScript(unlockTime, pubkeyHex);
+	const lockOutput = Buffer.concat([Buffer.from([0xa9, 0x14]), bitcoin.crypto.hash160(redeemScript), Buffer.from([0x87])]);
+
+	// every coin once, and only coins that really sit in this lock
+	const seen = new Set();
+	const coins = [];
+
+	for (const u of utxos || []) {
+		const value = Number(u.value);
+		const index = Number(u.index);
+
+		if (!/^[0-9a-fA-F]{64}$/.test(String(u.txid)) || !Number.isInteger(index) || index < 0 || !(value > 0)) {
+			throw new Error("Unexpected data for the locked coins. Refresh and try again.");
+		}
+
+		if (u.script && String(u.script).toLowerCase() !== lockOutput.toString('hex')) {
+			throw new Error("A coin at this lock address has an unexpected script.");
+		}
+
+		const key = u.txid + ":" + index;
+		if (seen.has(key)) continue;
+		seen.add(key);
+
+		coins.push({ txid: u.txid, index, value });
+	}
+
+	if (coins.length === 0) {
+		throw new Error("There are no coins to redeem at this lock address right now.");
+	}
+
+	const total = coins.reduce((sum, c) => sum + c.value, 0);
+	const outValue = total - fee;
+
+	if (outValue < DUST_SATS) {
+		throw new Error("The locked amount is too small to cover the network fee.");
+	}
+
+	const txb = new bitcoin.TransactionBuilder(mwc);
+	txb.setLockTime(unlockTime);
+
+	for (const c of coins) {
+		txb.addInput(c.txid, c.index, LOCK_SEQUENCE);
+	}
+
+	txb.addOutput(toAddress, outValue);
+
+	const tx = txb.buildIncomplete();
+
+	coins.forEach((c, i) => {
+		const sigHash = tx.hashForSignature(i, redeemScript, bitcoin.Transaction.SIGHASH_ALL);
+		const derSig = bitcoin.script.signature.encode(keyPair.sign(sigHash), bitcoin.Transaction.SIGHASH_ALL);
+
+		tx.setInputScript(i, Buffer.concat([pushData(derSig), pushData(redeemScript)]));
+	});
+
+	return { hex: tx.toHex(), txid: tx.getId(), amount: outValue, fee, inputs: coins.length };
+}
+
+// Broadcast a raw transaction (same request the Send screen makes).
+// Returns { tx: txid } or { error: message }.
+export async function broadcastRawTransaction(txHex) {
+	try {
+		const res = await axios.post(`${API}/broadcast`, qs.stringify({ raw: txHex }), {
+			headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+		});
+
+		const data = res.data;
+
+		if (!data || data.error || !data.result) {
+			return { error: (data && data.error && (data.error.message || String(data.error))) || "Broadcast failed" };
+		}
+
+		return { tx: data.result };
+	} catch (e) {
+		const detail = e && e.response && e.response.data && e.response.data.error;
+
+		return { error: (detail && (detail.message || String(detail))) || (e && e.message) || "Broadcast failed" };
+	}
+}
+
+// Plain-language version of a broadcast rejection.
+export function friendlyBroadcastError(message) {
+	const m = String(message || "");
+
+	if (/non-?final|locktime|lock time/i.test(m)) {
+		return "The network doesn't accept this yet. Its clock runs about an hour behind real time, so try again in a little while.";
+	}
+
+	if (/missing ?inputs|already|conflict|spent|bad-txns-inputs/i.test(m)) {
+		return "These coins were already spent, or a transaction spending them is already waiting to confirm.";
+	}
+
+	if (/fee|relay/i.test(m)) {
+		return "The network rejected the transaction fee (" + m + "). Please try again.";
+	}
+
+	return m || "The transaction could not be sent.";
 }

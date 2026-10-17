@@ -119,16 +119,24 @@ class TransactionDetailsScreen extends PureComponent {
     }
 
     explorer = async () => {
-        const { hash } = this.state.transaction;
-        let url = Config.EXPLORER_URL + "/#/transaction/" + hash;
+        const { hash } = this.state.transaction || {};
 
-        Linking.canOpenURL(url).then(supported => {
-            if (supported) {
-                Linking.openURL(url);
-            } else {
-                console.log("Don't know how to open URI: " + url);
-            }
-        });
+        if (!hash) {
+            Alert.alert("Explorer", "Transaction hash not available yet.");
+            return;
+        }
+
+        // EXPLORER_URL ends with "/", so strip it to avoid "explorer//#/..."
+        const base = (Config.EXPLORER_URL || "").replace(/\/+$/, "");
+        const url = base + "/#/transaction/" + hash;
+
+        try {
+            // openURL directly: canOpenURL is unreliable for https on Android 11+
+            await Linking.openURL(url);
+        } catch (e) {
+            console.log("Could not open explorer URL: " + url, e);
+            Alert.alert("Explorer", "Couldn't open the blockchain explorer.\n\n" + url);
+        }
     }
 
     close = async () => {

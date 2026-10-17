@@ -114,6 +114,20 @@ class ImportKeyScreen extends PureComponent {
                 return;
             }
 
+            // 🔒 also block keys that are already imported in a DIFFERENT wallet
+            const otherTs = Object.keys(wallet).find(ts =>
+                String(ts) !== String(timestamp) &&
+                wallet[ts] && typeof wallet[ts] === 'object' &&
+                wallet[ts].isCreated && wallet[ts].addresses &&
+                allNew.some(addr => wallet[ts].addresses[addr])
+            );
+
+            if (otherTs) {
+                this.setState({ loading: false });
+                Alert.alert("Duplicate", "This private key has already been imported in the wallet \"" + wallet[otherTs].title + "\".");
+                return;
+            }
+
             Alert.alert(
                 "Import Private Key",
                 "This will import all address formats (Legacy, SegWit, Bech32). Continue?",

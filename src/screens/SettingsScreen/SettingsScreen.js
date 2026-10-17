@@ -180,11 +180,41 @@ class SettingsScreen extends PureComponent {
         );
     }
 
-    copySeedPhrase = async () => {
+    // Requires the PIN (or biometrics) before the seed phrase is copied
+    copySeedPhrase = () => {
         const { timestamp } = this.props;
         const { seedPhrase } = this.props.wallet[timestamp];
 
-        await Clipboard.setString(seedPhrase.join(" "));
+        // Wallets imported from a private key (WIF) have no seed phrase
+        if (!seedPhrase || seedPhrase.length === 0) {
+            Alert.alert(
+                global.strings['settings.title'],
+                "This wallet was imported from a private key, so it has no seed phrase.",
+                [{ text: global.strings['settings.confirmAlertButton'] }],
+                {cancelable: false},
+            );
+            return;
+        }
+
+        pushPasswordGate(3, timestamp, () => this.doCopySeedPhrase());
+    }
+
+    doCopySeedPhrase = async () => {
+        const { timestamp } = this.props;
+        const { seedPhrase } = this.props.wallet[timestamp];
+        const seed = seedPhrase.join(" ");
+
+        await Clipboard.setString(seed);
+
+        // best effort: wipe the clipboard after a minute if it still holds the seed
+        setTimeout(async () => {
+            try {
+                if ((await Clipboard.getString()) === seed) {
+                    Clipboard.setString("");
+                }
+            } catch (e) {}
+        }, 60000);
+
         Alert.alert(
             global.strings['settings.title'],
             global.strings['settings.copySeedAlert'],
@@ -197,10 +227,11 @@ class SettingsScreen extends PureComponent {
         );
     }
 
+    // Must enter the current PIN before choosing a new one
     changePassword = async () => {
         const { timestamp } = this.props;
 
-        pushPasswordGate(0, timestamp);
+        pushPasswordGate(3, timestamp, () => pushPasswordGate(0, timestamp));
     }
 
     walletList = () => {
@@ -280,18 +311,12 @@ class SettingsScreen extends PureComponent {
     }
 
     openWIFImport = () => {
-        const { wallet } = this.props;
+        const { wallet, timestamp } = this.props;
 
-        const walletKeys = Object.keys(wallet).filter(
-            k => typeof wallet[k] === 'object' && wallet[k].addresses
-        );
-
-        if (walletKeys.length === 0) {
+        if (!wallet[timestamp] || !wallet[timestamp].addresses) {
             Alert.alert("Error", "No wallet found");
             return;
         }
-
-        const timestamp = walletKeys[0]; // or active wallet if you track it
 
         Navigation.showModal({
             stack: {
@@ -497,7 +522,7 @@ class SettingsScreen extends PureComponent {
 
                     <View style={{ flexDirection: 'row', justifyContent: "center", alignItems: "center", marginTop: 14, backgroundColor: '#202225' }}>
                         <Text style={{ fontSize: 14, padding: 10, color: 'white' }}>
-                            Version: 1.0.3
+                            Version: 1.0.4
                         </Text>
                     </View>
 

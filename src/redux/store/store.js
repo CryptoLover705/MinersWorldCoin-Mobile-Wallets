@@ -4,7 +4,7 @@ import { createStore, applyMiddleware, compose } from 'redux';
 import thunk from 'redux-thunk';
 import { compact } from 'lodash';
 import { persistStore, persistReducer } from 'redux-persist';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import SecureStorage from '../../utils/SecureStorage';
 
 import rootReducer from './reducers';
 
@@ -12,10 +12,11 @@ const middlewares = compact([
   thunk.withExtraArgument()
 ]);
 
-// ✅ NEW: persist config
+// Everything persisted (seeds, private keys, PIN) is encrypted at rest;
+// the key lives in the Keychain/Keystore. See src/utils/SecureStorage.js
 const persistConfig = {
   key: 'root',
-  storage: AsyncStorage,
+  storage: SecureStorage,
 };
 
 // ✅ NEW: wrap reducer
