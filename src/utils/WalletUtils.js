@@ -1213,7 +1213,9 @@ async function searchLockTimes(pubkeyHex, addresses, ranges, shouldCancel) {
 	pub.copy(script, 8);
 	script[41] = 0xac;
 
-	let sinceYield = 0;
+	const SLICE_MS = 8; // work for ~8 ms at a time, then let taps and animations run
+	let sliceStart = Date.now();
+	let checked = 0;
 
 	for (const range of ranges) {
 		const from = Math.max(range.from, 0x800000);
@@ -1233,10 +1235,10 @@ async function searchLockTimes(pubkeyHex, addresses, ranges, shouldCancel) {
 				}
 			}
 
-			if (++sinceYield >= 400) {
-				sinceYield = 0;
-				await new Promise((resolve) => setTimeout(resolve, 0));
+			if ((++checked & 7) === 0 && Date.now() - sliceStart >= SLICE_MS) {
+				await new Promise((resolve) => setTimeout(resolve, 6));
 				if (shouldCancel && shouldCancel()) return null;
+				sliceStart = Date.now();
 			}
 		}
 	}
@@ -1380,7 +1382,10 @@ export async function getLockUtxos(address) {
 // Same default fee the Send screen starts with: the network's feerate if available, else 0.0001 MWC.
 export async function getDefaultFeeSats() {
 	try {
-		const res = await global.socketConnect.get_general_fee();
+		const res = await Promise.race([
+			global.socketConnect.get_general_fee(),
+			new Promise((_, reject) => setTimeout(() => reject(new Error("fee lookup timed out")), 1500))
+		]);
 		const feerate = Number(res && res.feerate);
 
 		if (feerate > 0) return Math.round(feerate);

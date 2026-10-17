@@ -23,7 +23,7 @@ import { TRANSACTION_DETAILS_SCREEN, pushWalletList, pushPasswordGate } from 'sr
 import { Navigation } from 'react-native-navigation';
 import { connectWallet } from 'src/redux';
 import moment from "moment";
-import { subscribeToAddresses, getTransactionHistory, getAddressBalance, getWalletBalanceFromUTXOs, checkMempool, numberWithCommas, convertMWCtoUSD, formatUSD, mergeTransactions, getPendingDelta, getWalletBalanceStrict, getWalletLockPubkey, findLockUnlockTime, findLockInRange, getLockBalance, collectLockCandidates, summarizeLocks, formatLockRemaining, parseUnlockInput, lockAddress, shouldDedupeBalance, sendTransaction, buildLockRedeemTransaction, getLockUtxos, broadcastRawTransaction, friendlyBroadcastError, getDefaultFeeSats, shortenMiddle  } from 'src/utils/WalletUtils';
+import { subscribeToAddresses, getTransactionHistory, getAddressBalance, getWalletBalanceFromUTXOs, checkMempool, numberWithCommas, convertMWCtoUSD, formatUSD, mergeTransactions, getPendingDelta, getWalletBalanceStrict, getWalletLockPubkey, findLockUnlockTime, getLockBalance, collectLockCandidates, summarizeLocks, formatLockRemaining, lockAddress, shouldDedupeBalance, sendTransaction, buildLockRedeemTransaction, getLockUtxos, broadcastRawTransaction, friendlyBroadcastError, getDefaultFeeSats, shortenMiddle  } from 'src/utils/WalletUtils';
 import Config from 'react-native-config';
 
 const styles = StyleSheet.create({
@@ -74,8 +74,6 @@ class WalletScreen extends PureComponent {
             nowSec: Math.floor(Date.now() / 1000),
             showLocks: false,
             scanningLocks: false,
-            lockInput: "",
-            addingLock: false,
             lockAmount: "",
             lockDays: 30,
             creatingLock: false,
@@ -137,6 +135,8 @@ class WalletScreen extends PureComponent {
         this.lockClock = setInterval(() => {
             this.setState({ nowSec: Math.floor(Date.now() / 1000) });
         }, 30000);
+
+        this.prefetchFee();
     }
 
     componentWillUnmount() {
@@ -250,64 +250,6 @@ class WalletScreen extends PureComponent {
         }
     };
 
-    // Manual add: the user types the unlock time shown in the web wallet.
-    addManualLock = async () => {
-        const { setWalletValues, timestamp } = this.props;
-        const wallet = this.props.wallet[timestamp];
-        const say = (message) => Alert.alert("Time locks", message);
-
-        const pubkey = getWalletLockPubkey(wallet);
-        if (!pubkey) return say("This wallet has no key to check locks with.");
-
-        const parsed = parseUnlockInput(this.state.lockInput);
-        if (!parsed) {
-            return say("Enter the unlock time as unix seconds (for example 1790000000) or as YYYY-MM-DD HH:mm.");
-        }
-
-        this.setState({ addingLock: true });
-
-        try {
-            let address = null;
-            let unlockTime = null;
-
-            if (parsed.exact) {
-                unlockTime = parsed.exact;
-                address = lockAddress(unlockTime, pubkey);
-            } else {
-                // minute precision: look for a lock among the addresses we have paid
-                const known = collectLockCandidates(wallet.transactions, wallet.addresses).map((c) => c.address);
-                const hit = await findLockInRange(pubkey, known, parsed.from, parsed.to);
-
-                if (hit) {
-                    address = known[hit.index];
-                    unlockTime = hit.unlockTime;
-                }
-            }
-
-            if (!address) {
-                return say("No lock from this wallet matches that time. Try the exact unix seconds from the web wallet.");
-            }
-
-            const balance = await getLockBalance(address);
-
-            if (!(balance > 0)) {
-                return say("No coins were found at the lock address for that unlock time. Double-check the time.");
-            }
-
-            setWalletValues({
-                locks: { ...(wallet.locks || {}), [address]: { address, unlockTime, pubkey, balance, manual: true } },
-                timestamp
-            });
-
-            this.setState({ lockInput: "" });
-            say("Lock added.");
-        } catch (e) {
-            say("Couldn't check the lock right now. Check your connection and try again.");
-        } finally {
-            if (!this.unmounted) this.setState({ addingLock: false });
-        }
-    };
-
     // Show a transaction in the list straight away, as pending (replaced by the real one when it confirms)
     addLocalPendingTx = (hash, amountSats, feeSats, type, from, to, p2shOutputs) => {
         try {
@@ -338,6 +280,18 @@ class WalletScreen extends PureComponent {
         }
     };
 
+    // The network fee is looked up in the background and cached, so the confirmation dialogs never wait for it
+    prefetchFee = () => {
+        getDefaultFeeSats()
+            .then((fee) => { this.feeSats = fee; })
+            .catch(() => {});
+    };
+
+    openLocks = () => {
+        this.prefetchFee();
+        this.setState({ showLocks: true });
+    };
+
     // ---- redeem a matured lock back to this wallet ----
     confirmRedeem = async (address) => {
         const { timestamp } = this.props;
@@ -349,19 +303,26 @@ class WalletScreen extends PureComponent {
         if (!lock || !(lock.balance > 0)) return say("There are no coins to redeem at this lock.");
         if (lock.unlockTime > Math.floor(Date.now() / 1000)) return say("This lock has not reached its unlock time yet.");
 
-        const fee = await getDefaultFeeSats();
+        // show a spinner on the button straight away; the dialog itself needs no network call
+        this.setState({ redeemingAddress: address });
+        try {
+            const fee = this.feeSats || await getDefaultFeeSats();
+            this.prefetchFee();
 
-        Alert.alert(
-            "Redeem unlocked coins",
-            "Move " + numberWithCommas((lock.balance / 1e8).toFixed(8)) + " " + Config.COIN_NAME + " from this lock to your wallet?" +
-            "\n\nNetwork fee: " + numberWithCommas((fee / 1e8).toFixed(8)) + " " + Config.COIN_NAME +
-            "\n\nIf the network says it isn't ready yet, try again in about an hour.",
-            [
-                { text: "Cancel", style: "cancel" },
-                { text: "Redeem", onPress: () => pushPasswordGate(3, timestamp, () => this.doRedeem(address, fee)) }
-            ],
-            { cancelable: false }
-        );
+            Alert.alert(
+                "Redeem unlocked coins",
+                "Move " + numberWithCommas((lock.balance / 1e8).toFixed(8)) + " " + Config.COIN_NAME + " from this lock to your wallet?" +
+                "\n\nNetwork fee: " + numberWithCommas((fee / 1e8).toFixed(8)) + " " + Config.COIN_NAME +
+                "\n\nIf the network says it isn't ready yet, try again in about an hour.",
+                [
+                    { text: "Cancel", style: "cancel" },
+                    { text: "Redeem", onPress: () => pushPasswordGate(3, timestamp, () => this.doRedeem(address, fee)) }
+                ],
+                { cancelable: false }
+            );
+        } finally {
+            this.setState({ redeemingAddress: null });
+        }
     };
 
     doRedeem = async (address, fee) => {
@@ -442,38 +403,46 @@ class WalletScreen extends PureComponent {
         }
 
         const sats = Math.round(parseFloat(text) * 1e8);
-        const fee = await getDefaultFeeSats();
 
-        // smaller locks could cost about as much to redeem as they are worth
-        const minimum = Math.max(fee * 5, 50000);
-        if (sats < minimum) {
-            return say("The minimum lock is " + numberWithCommas((minimum / 1e8).toFixed(8)) + " " + Config.COIN_NAME + ".");
+        // spinner on the button straight away; the dialog itself needs no network call
+        this.setState({ creatingLock: true });
+        const fee = this.feeSats || await getDefaultFeeSats();
+        this.prefetchFee();
+
+        try {
+            // smaller locks could cost about as much to redeem as they are worth
+            const minimum = Math.max(fee * 5, 50000);
+            if (sats < minimum) {
+                return say("The minimum lock is " + numberWithCommas((minimum / 1e8).toFixed(8)) + " " + Config.COIN_NAME + ".");
+            }
+
+            const available = Math.round(((wallet.balance && wallet.balance.confirmed) || 0) * 1e8);
+            if (sats + fee > available) {
+                const most = Math.max(0, available - fee);
+                return say("You can lock at most " + numberWithCommas((most / 1e8).toFixed(8)) + " " + Config.COIN_NAME + " (your available coins minus the network fee).");
+            }
+
+            const days = this.state.lockDays;
+            const unlockTime = Math.floor(Date.now() / 1000) + days * 86400;
+            const address = lockAddress(unlockTime, pubkey);
+
+            Alert.alert(
+                "Lock coins",
+                "Lock " + numberWithCommas((sats / 1e8).toFixed(8)) + " " + Config.COIN_NAME + " for " + days + " days?" +
+                "\n\nThey cannot be spent or moved until " + moment.unix(unlockTime).format("DD MMM YYYY HH:mm") + "." +
+                "\n\nNetwork fee: " + numberWithCommas((fee / 1e8).toFixed(8)) + " " + Config.COIN_NAME,
+                [
+                    { text: "Cancel", style: "cancel" },
+                    {
+                        text: "Lock coins",
+                        onPress: () => pushPasswordGate(3, timestamp, () => this.doCreateLock(sats, fee, unlockTime, address, pubkey))
+                    }
+                ],
+                { cancelable: false }
+            );
+        } finally {
+            this.setState({ creatingLock: false });
         }
-
-        const available = Math.round(((wallet.balance && wallet.balance.confirmed) || 0) * 1e8);
-        if (sats + fee > available) {
-            const most = Math.max(0, available - fee);
-            return say("You can lock at most " + numberWithCommas((most / 1e8).toFixed(8)) + " " + Config.COIN_NAME + " (your available coins minus the network fee).");
-        }
-
-        const days = this.state.lockDays;
-        const unlockTime = Math.floor(Date.now() / 1000) + days * 86400;
-        const address = lockAddress(unlockTime, pubkey);
-
-        Alert.alert(
-            "Lock coins",
-            "Lock " + numberWithCommas((sats / 1e8).toFixed(8)) + " " + Config.COIN_NAME + " for " + days + " days?" +
-            "\n\nThey cannot be spent or moved until " + moment.unix(unlockTime).format("DD MMM YYYY HH:mm") + "." +
-            "\n\nNetwork fee: " + numberWithCommas((fee / 1e8).toFixed(8)) + " " + Config.COIN_NAME,
-            [
-                { text: "Cancel", style: "cancel" },
-                {
-                    text: "Lock coins",
-                    onPress: () => pushPasswordGate(3, timestamp, () => this.doCreateLock(sats, fee, unlockTime, address, pubkey))
-                }
-            ],
-            { cancelable: false }
-        );
     };
 
     doCreateLock = async (sats, fee, unlockTime, address, pubkey) => {
@@ -553,7 +522,7 @@ class WalletScreen extends PureComponent {
                 </View>
 
                 {summary.lockedSats > 0 && (
-                    <TouchableOpacity onPress={() => this.setState({ showLocks: true })}>
+                    <TouchableOpacity onPress={this.openLocks}>
                         <View style={row}>
                             <Text style={{ color: 'white', opacity: 0.9, fontSize: 14 }}>Locked coins</Text>
                             <Text style={{ color: '#e6a23c', fontSize: 14, fontWeight: 'bold' }}>{amount(lockedCoins)}</Text>
@@ -566,7 +535,7 @@ class WalletScreen extends PureComponent {
                 )}
 
                 {summary.readySats > 0 && (
-                    <TouchableOpacity onPress={() => this.setState({ showLocks: true })}>
+                    <TouchableOpacity onPress={this.openLocks}>
                         <View style={row}>
                             <Text style={{ color: 'white', opacity: 0.9, fontSize: 14 }}>Unlocked (ready to redeem)</Text>
                             <Text style={{ color: '#71b888', fontSize: 14, fontWeight: 'bold' }}>{amount(readyCoins)}</Text>
@@ -589,7 +558,7 @@ class WalletScreen extends PureComponent {
     };
 
     renderLocksPanel = (summary, nowSec) => {
-        const { scanningLocks, addingLock, lockInput } = this.state;
+        const { scanningLocks } = this.state;
         const amount = (sats) => numberWithCommas((sats / 1e8).toFixed(8)) + " " + Config.COIN_NAME;
 
         return (
@@ -600,8 +569,8 @@ class WalletScreen extends PureComponent {
                 <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding: 20 }}>
                     <Text style={{ fontSize: 20, fontWeight: 'bold', color: 'black', textAlign: 'center' }}>Time locks</Text>
                     <Text style={{ fontSize: 13, color: '#555', textAlign: 'center', marginTop: 8, marginBottom: 15 }}>
-                        Coins you locked with the web wallet are held at a lock address (it starts with 5) until the unlock time.
-                        They are not spendable here until then.
+                        Locks made from this wallet, in the app or in the web wallet, are found automatically.
+                        Locked coins can't be spent until their unlock time.
                     </Text>
 
                     {scanningLocks && (
@@ -685,29 +654,6 @@ class WalletScreen extends PureComponent {
                         onPress={this.confirmCreateLock}
                     />
 
-                    <Text style={{ fontSize: 15, fontWeight: 'bold', color: 'black', marginTop: 25 }}>Add a lock manually</Text>
-                    <Text style={{ fontSize: 12, color: '#555', marginBottom: 5 }}>
-                        Locks made from this wallet's seed are found automatically. If one is missing, enter its unlock time from the
-                        web wallet: unix seconds, or YYYY-MM-DD HH:mm.
-                    </Text>
-                    <Input
-                        placeholder="1790000000  or  2027-03-01 14:30"
-                        value={lockInput}
-                        autoCapitalize="none"
-                        autoCorrect={false}
-                        renderErrorMessage={false}
-                        containerStyle={{ paddingHorizontal: 0 }}
-                        inputStyle={{ fontSize: 15, color: 'black' }}
-                        onChangeText={(lockInput) => this.setState({ lockInput })}
-                    />
-                    <Button
-                        title="Add lock"
-                        loading={addingLock}
-                        disabled={addingLock}
-                        containerStyle={{ marginTop: 10 }}
-                        buttonStyle={{ backgroundColor: '#202225' }}
-                        onPress={this.addManualLock}
-                    />
                     <Button
                         title="Close"
                         type="clear"
@@ -965,6 +911,34 @@ class WalletScreen extends PureComponent {
         });
     }
 
+    // The rows only depend on the values in `key`. Reusing the same elements when something unrelated changes
+    // (typing an amount, opening the locks panel, the countdown) keeps taps and typing instant, however long the history is.
+    renderTransactionList = (transactions, timestamp) => {
+        const wallet = this.props.wallet[timestamp] || {};
+        const key = [transactions, this.state.usdValue, wallet.balance && wallet.balance.confirmed, timestamp];
+        const last = this.transactionListMemo;
+
+        if (last && last.key.every((value, i) => value === key[i])) return last.element;
+
+        const element = Object.keys(transactions)
+            .sort()
+            .reverse()
+            .map((time) => (
+                <TouchableOpacity
+                    key={time}
+                    onPress={() =>
+                        this.openTransactionDetails(transactions[time], timestamp)
+                    }
+                >
+                    {this.renderTransaction(transactions[time])}
+                </TouchableOpacity>
+            ));
+
+        this.transactionListMemo = { key, element };
+
+        return element;
+    };
+
     renderTransaction = (transaction) => {
         const amountMWC = transaction.amount / Math.pow(10, 8);
 
@@ -1078,7 +1052,7 @@ class WalletScreen extends PureComponent {
                         </View>
 
                         <TouchableOpacity
-                            onPress={() => this.setState({ showLocks: true })}
+                            onPress={this.openLocks}
                             style={{ alignSelf: 'center', marginTop: 8 }}
                         >
                             <Text style={{ color: 'white', opacity: 0.7, fontSize: 12, textDecorationLine: 'underline' }}>
@@ -1089,19 +1063,7 @@ class WalletScreen extends PureComponent {
                 </View>
 
                 <ScrollView style={{ width: '100%' }}>
-                    {Object.keys(transactions)
-                        .sort()
-                        .reverse()
-                        .map((time) => (
-                            <TouchableOpacity
-                                key={time}
-                                onPress={() =>
-                                    this.openTransactionDetails(transactions[time], timestamp)
-                                }
-                            >
-                                {this.renderTransaction(transactions[time])}
-                            </TouchableOpacity>
-                        ))}
+                    {this.renderTransactionList(transactions, timestamp)}
                 </ScrollView>
                 {this.state.showLocks && this.renderLocksPanel(lockSummary, nowSec)}
             </View>
