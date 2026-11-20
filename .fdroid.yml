@@ -1,0 +1,40 @@
+Categories:
+  - Finance
+License: MIT
+Summary: A self-custody MinersWorldCoin wallet for Android
+Description: |-
+  MinersWorldCoin is a mobile wallet for creating or importing a wallet,
+  managing addresses, checking balances and transaction history, and sending
+  or receiving MWC. It includes QR code scanning and address book support.
+  .
+SourceCode: https://github.com/Miners-World-Coin-MWC/MinersWorldCoin-Mobile-Wallets
+IssueTracker: https://github.com/Miners-World-Coin-MWC/MinersWorldCoin-Mobile-Wallets/issues
+RepoType: git
+Repo: https://github.com/Miners-World-Coin-MWC/MinersWorldCoin-Mobile-Wallets.git
+Builds:
+  - versionName: 1.0.5
+    versionCode: 105
+    commit: REPLACE_WITH_FULL_SHA_OF_MERGED_1_0_5_SOURCE
+    subdir: android
+    sudo:
+      - set -e
+      - curl -fsSL https://nodejs.org/dist/v24.22.3/node-v24.22.3-linux-x64.tar.xz -o /tmp/node-v24.22.3-linux-x64.tar.xz
+      - echo '4f2b175a6d53a5c617a80dba2676238a0688cef28c6da4eba35c7d844e66fcfb  /tmp/node-v24.22.3-linux-x64.tar.xz' | sha256sum -c -
+      - mkdir -p /opt/node-v24.22.3
+      - tar -xJf /tmp/node-v24.22.3-linux-x64.tar.xz --strip-components=1 -C /opt/node-v24.22.3
+      - rm /tmp/node-v24.22.3-linux-x64.tar.xz
+      - ln -sf /opt/node-v24.22.3/bin/node /usr/local/bin/node
+      - ln -sf /opt/node-v24.22.3/bin/npm /usr/local/bin/npm
+      - ln -sf /opt/node-v24.22.3/bin/npx /usr/local/bin/npx
+      - npm install --global yarn@1.22.22
+    prebuild:
+      - cd ..
+      - yarn install --frozen-lockfile --ignore-engines --network-timeout 600000
+      - yarn jetifier
+      - cd android
+    gradle: yes
+    output: app/build/outputs/apk/release/app-release-unsigned.apk
+MaintainerNotes: |-
+  Draft recipe; React Native/Yarn dependency resolution has not yet been validated
+  in F-Droid build CI. Review the required project API connection for applicable
+  AntiFeatures and confirm source repository and commit before submission.

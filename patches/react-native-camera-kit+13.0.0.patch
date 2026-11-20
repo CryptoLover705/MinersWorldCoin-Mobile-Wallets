@@ -1,5 +1,5 @@
 diff --git a/node_modules/react-native-camera-kit/android/build.gradle b/node_modules/react-native-camera-kit/android/build.gradle
-index be91f70..3d7be54 100644
+index be91f70..6d97018 100644
 --- a/node_modules/react-native-camera-kit/android/build.gradle
 +++ b/node_modules/react-native-camera-kit/android/build.gradle
 @@ -20,7 +20,7 @@ android {
@@ -8,6 +8,141 @@ index be91f70..3d7be54 100644
      implementation group: 'com.drewnoakes', name: 'metadata-extractor', version: '2.12.0'
 -    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
 +    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion"
- 
+-
++
      // CameraX core library using the camera2 implementation
      def camerax_version = "1.1.0"
+@@ -38,7 +38,8 @@ dependencies {
+     // If you want to additionally use the CameraX Extensions library
+     // implementation "androidx.camera:camera-extensions:${camerax_version}"
+-
++
+-    implementation 'com.google.mlkit:barcode-scanning:17.0.2'
++    // Apache-2.0 QR decoder; avoids proprietary ML Kit and Play Services.
++    implementation 'com.google.zxing:core:3.5.3'
+ }
+ repositories {
+     mavenCentral()
+diff --git a/node_modules/react-native-camera-kit/android/src/main/java/com/rncamerakit/QRCodeAnalyzer.kt b/node_modules/react-native-camera-kit/android/src/main/java/com/rncamerakit/QRCodeAnalyzer.kt
+index bb53cec..9e4a0c3 100644
+--- a/node_modules/react-native-camera-kit/android/src/main/java/com/rncamerakit/QRCodeAnalyzer.kt
++++ b/node_modules/react-native-camera-kit/android/src/main/java/com/rncamerakit/QRCodeAnalyzer.kt
+@@ -1,31 +1,98 @@
+ package com.rncamerakit
+-
++
+-import android.annotation.SuppressLint
+-import androidx.camera.core.ExperimentalGetImage
++import android.os.Handler
++import android.os.Looper
+ import androidx.camera.core.ImageAnalysis
+ import androidx.camera.core.ImageProxy
+-import com.google.mlkit.vision.barcode.BarcodeScanning
+-import com.google.mlkit.vision.common.InputImage
++import com.google.zxing.BarcodeFormat
++import com.google.zxing.BinaryBitmap
++import com.google.zxing.DecodeHintType
++import com.google.zxing.MultiFormatReader
++import com.google.zxing.PlanarYUVLuminanceSource
++import com.google.zxing.common.HybridBinarizer
+-
++
+-class QRCodeAnalyzer (
++class QRCodeAnalyzer(
+     private val onQRCodesDetected: (qrCodes: List<String>) -> Unit
+ ) : ImageAnalysis.Analyzer {
+-    @SuppressLint("UnsafeExperimentalUsageError")
+-    @ExperimentalGetImage
++    private val reader = MultiFormatReader().apply {
++        setHints(
++            mapOf(
++                DecodeHintType.POSSIBLE_FORMATS to listOf(BarcodeFormat.QR_CODE),
++                DecodeHintType.TRY_HARDER to true
++            )
++        )
++    }
++    private val mainHandler = Handler(Looper.getMainLooper())
++
+     override fun analyze(image: ImageProxy) {
+-        val inputImage = InputImage.fromMediaImage(image.image!!, image.imageInfo.rotationDegrees)
+-
+-        val scanner = BarcodeScanning.getClient()
+-        scanner.process(inputImage)
+-            .addOnSuccessListener { barcodes ->
+-                val strBarcodes = mutableListOf<String>()
+-                barcodes.forEach { barcode ->
+-                    strBarcodes.add(barcode.rawValue ?: return@forEach)
++        try {
++            val width = image.width
++            val height = image.height
++            val plane = image.planes[0]
++            val buffer = plane.buffer
++            val luminance = ByteArray(width * height)
++
++            for (y in 0 until height) {
++                for (x in 0 until width) {
++                    val index = y * plane.rowStride + x * plane.pixelStride
++                    if (index < buffer.limit()) {
++                        luminance[y * width + x] = buffer.get(index)
++                    }
+                 }
+-                onQRCodesDetected(strBarcodes)
+             }
+-            .addOnCompleteListener{
+-                image.close()
++
++            val (rotated, rotatedWidth, rotatedHeight) =
++                rotate(luminance, width, height, image.imageInfo.rotationDegrees)
++
++            val source = PlanarYUVLuminanceSource(
++                rotated,
++                rotatedWidth,
++                rotatedHeight,
++                0,
++                0,
++                rotatedWidth,
++                rotatedHeight,
++                false
++            )
++            val result = reader.decodeWithState(BinaryBitmap(HybridBinarizer(source)))
++            mainHandler.post { onQRCodesDetected(listOf(result.text)) }
++        } catch (_: Exception) {
++            // Most camera frames do not contain a QR code.
++        } finally {
++            reader.reset()
++            image.close()
++        }
++    }
++
++    private fun rotate(
++        input: ByteArray,
++        width: Int,
++        height: Int,
++        degrees: Int
++    ): Triple<ByteArray, Int, Int> {
++        if (degrees % 360 == 0) return Triple(input, width, height)
++
++        val output = ByteArray(input.size)
++        when (degrees) {
++            90 -> {
++                for (y in 0 until height) for (x in 0 until width) {
++                    output[x * height + (height - y - 1)] = input[y * width + x]
++                }
++                return Triple(output, height, width)
++            }
++            180 -> {
++                for (y in 0 until height) for (x in 0 until width) {
++                    output[(height - y - 1) * width + (width - x - 1)] = input[y * width + x]
++                }
++                return Triple(output, width, height)
++            }
++            270 -> {
++                for (y in 0 until height) for (x in 0 until width) {
++                    output[(width - x - 1) * height + y] = input[y * width + x]
++                }
++                return Triple(output, height, width)
+             }
++            else -> return Triple(input, width, height)
++        }
+     }
+ }

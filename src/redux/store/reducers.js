@@ -1,7 +1,7 @@
 // @flow
 
 import { persistCombineReducers } from 'redux-persist';
-import storage from 'redux-persist/lib/storage';
+import SecureStorage from '../../utils/SecureStorage';
 
 import {
   wallet,
@@ -10,7 +10,8 @@ import {
 
 const config = {
   key: 'LIFTED_REDUX_STORE',
-  storage
+  // Preserve the legacy persistence key and migrate its prior plaintext value.
+  storage: SecureStorage
 };
 
 const appReducer = persistCombineReducers(config, {

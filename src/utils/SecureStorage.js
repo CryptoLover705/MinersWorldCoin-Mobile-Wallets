@@ -33,7 +33,9 @@ async function loadOrCreateMasterKey() {
     const existing = await Keychain.getGenericPassword({ service: KEY_SERVICE });
 
     if (existing && existing.password) {
-        return Buffer.from(existing.password, 'hex');
+        const key = Buffer.from(existing.password, 'hex');
+        if (key.length !== 32) throw new Error('The secure storage key is invalid');
+        return key;
     }
 
     const key = crypto.randomBytes(32);
@@ -133,13 +135,9 @@ const SecureStorage = {
 
         // Legacy plaintext from before encryption: use it, and re-save encrypted now.
         if (!raw.startsWith(PREFIX)) {
-            try {
-                const master = await getMasterKey();
-                await AsyncStorage.setItem(key, encryptString(raw, master));
-            } catch (e) {
-                console.log('SecureStorage: could not migrate to encrypted storage yet', e);
-            }
-
+            const master = await getMasterKey();
+            // Keep the original intact and fail closed if encryption cannot complete.
+            await AsyncStorage.setItem(key, encryptString(raw, master));
             return raw;
         }
 
@@ -149,20 +147,13 @@ const SecureStorage = {
         } catch (e) {
             console.log('SecureStorage: could not decrypt stored data', e);
             await quarantine(key, raw);
-            return null;
+            throw e;
         }
     },
 
     async setItem(key, value) {
-        try {
-            const master = await getMasterKey();
-            return await AsyncStorage.setItem(key, encryptString(value, master));
-        } catch (e) {
-            // Secure store unavailable: keep the app working (same as before
-            // encryption existed) rather than losing the user's wallets.
-            console.log('SecureStorage: secure store unavailable, saving unencrypted', e);
-            return AsyncStorage.setItem(key, value);
-        }
+        const master = await getMasterKey();
+        return AsyncStorage.setItem(key, encryptString(value, master));
     },
 
     removeItem(key) {

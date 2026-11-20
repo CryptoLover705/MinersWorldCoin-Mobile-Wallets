@@ -168,9 +168,16 @@ class ConfirmationScreen extends PureComponent {
   }
 
   confirm = async () => {
-    var { setWalletValues, amount, address, fee, from, timelock, timestamp } = this.props;
+    var { setWalletValues, amount, amountSats, address, fee, feeSats, from, timelock, timestamp } = this.props;
     const { addresses, receiveAddress } = this.props.wallet[timestamp];
     let tx;
+
+    // Recheck exact base-unit values before requesting a signature.
+    if (!Number.isSafeInteger(amountSats) || amountSats <= 0 ||
+        !Number.isSafeInteger(feeSats) || feeSats <= 0) {
+      Alert.alert(global.strings['send.title'], global.strings['send.errorAlert']);
+      return;
+    }
 
     // ignore double taps while a send is already in progress
     if (this.sending) return;
@@ -179,13 +186,10 @@ class ConfirmationScreen extends PureComponent {
     this.setState({isLoading: true});
 
 
-    amount = Math.pow(10, 8) * amount;
-    fee = Math.pow(10, 8) * fee;
-
     try {
       await global.socketConnect.connect();
 
-      tx = await sendTransaction(global.socketConnect, addresses, receiveAddress, address, amount, fee, timelock);
+      tx = await sendTransaction(global.socketConnect, addresses, receiveAddress, address, amountSats, feeSats, timelock);
       console.log(tx);
     } catch (e) {
       console.log(e);
@@ -201,7 +205,7 @@ class ConfirmationScreen extends PureComponent {
 
     if(!("error" in tx)) {
       // show it in the wallet straight away (amount/fee here are already in satoshis)
-      this.addPendingTransaction(tx.tx, amount, fee);
+      this.addPendingTransaction(tx.tx, amountSats, feeSats);
 
       // tappable result card (see renderSentResult) instead of a plain Alert
       this.setState({ sentResult: { txid: tx.tx } });

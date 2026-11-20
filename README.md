@@ -205,11 +205,11 @@ cd android
 ./gradlew clean
 ```
 
-<!-- ---
+## License
 
-# License
+This project is licensed under the MIT License. See [LICENSE](LICENSE).
 
-[INSERT LICENSE HERE] -->
+The Android QR scanner uses ZXing Core under Apache-2.0 and React Native Camera Kit under MIT. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
 ---
 

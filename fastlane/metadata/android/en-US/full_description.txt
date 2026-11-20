@@ -1,0 +1,1 @@
+MinersWorldCoin is a mobile wallet for creating or importing a wallet, managing addresses, checking balances and transaction history, and sending or receiving MWC. It includes QR code scanning and address book support.
