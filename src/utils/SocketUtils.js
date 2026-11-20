@@ -51,7 +51,7 @@ class Client {
 
         try {
             if(params) {
-                return this.socket.emitAsync(method, params).then((data) => {console.log(data)}).catch((data) => {
+                return this.socket.emitAsync(method, params).catch((data) => {
                     if(data.error) {
                         return Promise.reject(new Error(method + ": " + JSON.stringify(data.error)));
                     }

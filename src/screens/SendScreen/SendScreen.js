@@ -21,7 +21,7 @@ import RNPickerSelect, { defaultStyles } from 'react-native-picker-select';
 // import DatePicker from 'react-native-datepicker';
 import DatePickerInput from 'src/components/DatePicker';
 import { connectWallet } from 'src/redux';
-import { sendTransaction, isAddress } from 'src/utils/WalletUtils';
+import { sendTransaction, isAddress, parseCoinAmount } from 'src/utils/WalletUtils';
 import moment from "moment";
 import { SCAN_SCREEN, CONFIRMATION_SCREEN, ADDRESS_LIST_SCREEN, pushPasswordGate } from 'src/navigation';
 
@@ -125,23 +125,20 @@ class SendScreen extends PureComponent {
         const { timestamp } = this.props;
         var { from, to, amount, fee, timelock } = this.state;
 
-        if (isNaN(fee)) {
-            fee = parseFloat(fee.replace(",", "."));
-        }
+        const amountSats = parseCoinAmount(amount);
+        const feeSats = parseCoinAmount(fee);
 
-        if (isNaN(amount)) {
-            amount = parseFloat(amount.replace(",", "."));
-        }
-
-        if (isAddress(to) && amount > 0 && fee > 0) {
+        if (isAddress(to) && amountSats > 0 && feeSats > 0) {
             Navigation.showModal({
                 stack: {
                     children: [{
                         component: {
                             name: CONFIRMATION_SCREEN,
                             passProps: {
-                                amount: amount,
-                                fee: fee,
+                                amount: amountSats / 100000000,
+                                fee: feeSats / 100000000,
+                                amountSats,
+                                feeSats,
                                 address: to,
                                 from: {},
                                 timelock: moment(timelock).unix(),

@@ -8,6 +8,7 @@ import Config from 'react-native-config';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from "axios";
 import qs from 'qs';
+import SecureStorage from './SecureStorage';
 
 export const ADDRESS_TYPES = {
     LEGACY: 'legacy',
@@ -28,6 +29,20 @@ const mwc = {
 	scriptHash: 10, //parseInt(Config.SCRIPT_HASH),
 	wif: 123, //parseInt(Config.WIF),
 	dustThreshold: 0
+}
+
+// Parse a user-entered coin amount without floating point rounding. Returns
+// base units (1 coin = 100,000,000 units), or null for invalid input.
+export function parseCoinAmount(value) {
+    let text = String(value).trim();
+    if (text.includes(',') && !text.includes('.')) text = text.replace(',', '.');
+    if (!/^(?:[0-9]+(?:\.[0-9]{0,8})?|\.[0-9]{1,8})$/.test(text)) return null;
+
+    const parts = text.split('.');
+    const whole = Number(parts[0] || '0');
+    const fraction = Number(((parts[1] || '') + '00000000').slice(0, 8));
+    const units = whole * 100000000 + fraction;
+    return Number.isSafeInteger(units) ? units : null;
 }
 
 export function numberWithCommas(number) {
@@ -85,8 +100,8 @@ export async function getMirgationWallets() {
     const wallets = await AsyncStorage.getItem('wallets');
 
     if(wallets !== null) {
-    	AsyncStorage.setItem('wallets_backup', wallets);
-      	return JSON.parse(wallets);
+        await SecureStorage.setItem('wallets_backup', wallets);
+        return JSON.parse(wallets);
     }
   } catch(e) {
     return null;
@@ -450,6 +465,11 @@ export async function sendTransaction(
     fee,
     timelock = 0
 ) {
+    if (!Number.isSafeInteger(amount) || amount <= 0 ||
+        !Number.isSafeInteger(fee) || fee <= 0) {
+        return { error: "Invalid amount or fee" };
+    }
+
     let outputsAmount = 0;
     let keyPairs = [];
     let scripts = [];
@@ -575,7 +595,6 @@ export async function sendTransaction(
     // 🚀 Build + Broadcast
     try {
         const txHex = txb.build().toHex();
-        console.log("Transaction HEX:", txHex);
 
         let broadcast;
 
@@ -588,9 +607,6 @@ export async function sendTransaction(
             });
 
             broadcast = res.data;
-            console.log("Broadcast result:", broadcast);
-            console.log("TX HEX LENGTH:", txHex.length);
-            console.log("TX HEX:", txHex);
 
         } catch (e) {
             console.log("Broadcast error:", e?.response?.data || e.message);
