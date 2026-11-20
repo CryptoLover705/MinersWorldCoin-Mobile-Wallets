@@ -12,6 +12,8 @@ def enableHermes = project.ext.react.get("enableHermes", false)
 
 def enableSeparateBuildPerCPUArchitecture = false
 def enableProguardInReleaseBuilds = false
+def releaseKeystorePath = System.getenv("ANDROID_KEYSTORE_PATH")
+def hasReleaseSigning = releaseKeystorePath != null && !releaseKeystorePath.isEmpty()
 
 android {
     namespace "com.minersworldcoin.wallet"
@@ -35,6 +37,17 @@ android {
         jvmTarget = "11"
     }
 
+    signingConfigs {
+        if (hasReleaseSigning) {
+            release {
+                storeFile file(releaseKeystorePath)
+                storePassword System.getenv("ANDROID_KEYSTORE_PASSWORD")
+                keyAlias System.getenv("ANDROID_KEY_ALIAS")
+                keyPassword System.getenv("ANDROID_KEY_PASSWORD")
+            }
+        }
+    }
+
     splits {
         abi {
             reset()
@@ -44,27 +57,16 @@ android {
         }
     }
 
-    signingConfigs {
-        debug {
-            storeFile file('debug.keystore')
-            storePassword 'android'
-            keyAlias 'androiddebugkey'
-            keyPassword 'android'
-        }
-        release {
-            storeFile file('debug.keystore')
-            storePassword 'android'
-            keyAlias 'androiddebugkey'
-            keyPassword 'android'
-        }
-    }
-
     buildTypes {
         debug {
-            signingConfig signingConfigs.debug
+            // Use Android Gradle Plugin's generated debug signing key.
         }
         release {
-            signingConfig signingConfigs.release
+            // CI signs developer releases when signing secrets are present.
+            // F-Droid builds without those secrets remain unsigned for F-Droid to sign.
+            if (hasReleaseSigning) {
+                signingConfig signingConfigs.release
+            }
             minifyEnabled false
             proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
         }
