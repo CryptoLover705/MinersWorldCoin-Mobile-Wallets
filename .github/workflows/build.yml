@@ -2,7 +2,7 @@ name: Build Mobile Wallet
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ main, master, Test_update ]
   workflow_dispatch:
 
 jobs:
