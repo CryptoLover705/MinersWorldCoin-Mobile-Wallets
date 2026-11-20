@@ -63,7 +63,7 @@ jobs:
           path: android/app/build/outputs/apk/release/*.apk
 
   build-ios:
-    runs-on: macos-15
+    runs-on: macos-15-intel
 
     steps:
       - name: Checkout repo
