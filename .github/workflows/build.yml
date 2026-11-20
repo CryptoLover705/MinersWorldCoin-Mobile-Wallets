@@ -16,7 +16,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 16.20.2
+          node-version: 24
           cache: 'yarn'
 
       - name: Setup Java (JDK 11)
@@ -90,7 +90,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 16.20.2
+          node-version: 24
           cache: 'yarn'
 
       - name: Install dependencies
